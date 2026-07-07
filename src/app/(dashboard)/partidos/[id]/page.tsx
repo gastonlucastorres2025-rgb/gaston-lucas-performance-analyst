@@ -31,7 +31,13 @@ export default async function PartidoDetallePage({
         <div className="mb-6 flex items-center justify-center gap-8">
           <div className="flex flex-col items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/escudo-nacional.png" alt="Nacional" className="h-20 w-20 object-contain" />
+            <img
+              src="/escudo-nacional.png"
+              alt="Nacional"
+              width={80}
+              height={80}
+              className="h-20 w-20 object-contain"
+            />
             <p className="text-sm font-semibold">Nacional</p>
           </div>
           <p className="text-2xl font-bold text-foreground/40">VS</p>
@@ -41,6 +47,8 @@ export default async function PartidoDetallePage({
               <img
                 src={match.escudo_rival_url}
                 alt={match.rival ?? ""}
+                width={80}
+                height={80}
                 className="h-20 w-20 object-contain"
               />
             )}

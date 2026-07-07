@@ -71,7 +71,13 @@ export default async function MetricasPage() {
               >
                 {m.escudo_rival_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.escudo_rival_url} alt="" className="h-9 w-9 object-contain" />
+                  <img
+                    src={m.escudo_rival_url}
+                    alt=""
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 object-contain"
+                  />
                 ) : (
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                     {m.rival.slice(0, 2).toUpperCase()}

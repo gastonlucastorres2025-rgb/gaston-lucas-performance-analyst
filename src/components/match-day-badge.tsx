@@ -31,7 +31,13 @@ export function MatchDayBadge({ match }: { match: Match }) {
     >
       {match.escudo_rival_url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={match.escudo_rival_url} alt="" className="h-3.5 w-3.5 shrink-0 object-contain" />
+        <img
+          src={match.escudo_rival_url}
+          alt=""
+          width={14}
+          height={14}
+          className="h-3.5 w-3.5 shrink-0 object-contain"
+        />
       ) : (
         <span className="shrink-0">⚽</span>
       )}

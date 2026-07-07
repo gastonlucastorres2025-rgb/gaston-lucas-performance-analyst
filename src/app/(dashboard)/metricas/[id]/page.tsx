@@ -66,7 +66,13 @@ export default async function MetricaDetallePage({
       <div className="mb-6 flex items-center justify-center gap-4 rounded-lg border border-border bg-surface p-4">
         <div className="flex flex-col items-center gap-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/escudo-nacional.png" alt="Nacional" className="h-7 w-7 object-contain" />
+          <img
+            src="/escudo-nacional.png"
+            alt="Nacional"
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
+          />
           <p className="text-xs font-semibold">Nacional</p>
         </div>
         <p className="font-mono text-2xl font-bold">
@@ -75,7 +81,13 @@ export default async function MetricaDetallePage({
         <div className="flex flex-col items-center gap-1">
           {m.escudo_rival_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.escudo_rival_url} alt={m.rival} className="h-7 w-7 object-contain" />
+            <img
+              src={m.escudo_rival_url}
+              alt={m.rival}
+              width={28}
+              height={28}
+              className="h-7 w-7 object-contain"
+            />
           ) : (
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/10 text-[10px] font-semibold text-accent">
               {m.rival.slice(0, 2).toUpperCase()}
