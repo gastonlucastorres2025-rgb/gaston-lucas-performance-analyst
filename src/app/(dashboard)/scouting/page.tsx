@@ -1,23 +1,20 @@
 import { PageHeader } from "@/components/page-header";
 import { ScoutingDashboard } from "@/components/scouting-dashboard";
-import { createClient } from "@/lib/supabase/server";
+import { fetchScoutingSheet } from "@/lib/scouting-sheet";
+
+export const dynamic = "force-dynamic";
 
 export default async function ScoutingPage() {
-  const supabase = await createClient();
-  const { data: targets } = await supabase
-    .from("scouting_targets")
-    .select(
-      "id, nombre, apellido, equipo_actual, liga, pais_liga, fecha_nacimiento, nacionalidad, posicion, club_formativo, proceso_seleccion, experiencia_altura, categoria, etiqueta",
-    )
-    .order("apellido", { ascending: true });
+  const targets = await fetchScoutingSheet();
+  const sorted = targets.slice().sort((a, b) => a.apellido.localeCompare(b.apellido));
 
   return (
     <div>
       <PageHeader
         title="Scouting"
-        description="Jugadores en seguimiento: filtrá y ubicá dónde están jugando."
+        description="Jugadores en seguimiento, actualizado en vivo desde Google Sheets."
       />
-      <ScoutingDashboard targets={targets ?? []} />
+      <ScoutingDashboard targets={sorted} />
     </div>
   );
 }
