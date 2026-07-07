@@ -1,10 +1,10 @@
+import { PageHeader } from "@/components/page-header";
+
 export default function InformesPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Informes</h1>
-      <p className="mt-2 text-sm text-foreground/60">
-        Informes generados: post-partido, scouting, médicos, mensuales.
-      </p>
-    </div>
+    <PageHeader
+      title="Informes"
+      description="Informes generados: post-partido, scouting, médicos, mensuales."
+    />
   );
 }

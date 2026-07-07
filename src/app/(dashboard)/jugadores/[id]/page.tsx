@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+
 export default async function JugadorDetallePage({
   params,
 }: {
@@ -6,11 +8,9 @@ export default async function JugadorDetallePage({
   const { id } = await params;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Ficha del jugador</h1>
-      <p className="mt-2 text-sm text-foreground/60">
-        Datos personales, físicos, médicos, estadísticas y videos del jugador {id}.
-      </p>
-    </div>
+    <PageHeader
+      title="Ficha del jugador"
+      description={`Datos personales, físicos, médicos, estadísticas y videos del jugador ${id}.`}
+    />
   );
 }

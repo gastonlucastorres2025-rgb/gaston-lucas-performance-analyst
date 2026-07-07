@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+
 export default async function EntrenamientoDetallePage({
   params,
 }: {
@@ -6,11 +8,9 @@ export default async function EntrenamientoDetallePage({
   const { id } = await params;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Detalle de entrenamiento</h1>
-      <p className="mt-2 text-sm text-foreground/60">
-        Asistencia y ejercicios de la sesión {id}.
-      </p>
-    </div>
+    <PageHeader
+      title="Detalle de entrenamiento"
+      description={`Asistencia y ejercicios de la sesión ${id}.`}
+    />
   );
 }

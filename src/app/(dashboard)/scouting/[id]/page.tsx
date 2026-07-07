@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+
 export default async function ScoutingDetallePage({
   params,
 }: {
@@ -6,11 +8,9 @@ export default async function ScoutingDetallePage({
   const { id } = await params;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Informe de scouting</h1>
-      <p className="mt-2 text-sm text-foreground/60">
-        Fortalezas, debilidades y recomendación sobre el objetivo {id}.
-      </p>
-    </div>
+    <PageHeader
+      title="Informe de scouting"
+      description={`Fortalezas, debilidades y recomendación sobre el objetivo ${id}.`}
+    />
   );
 }

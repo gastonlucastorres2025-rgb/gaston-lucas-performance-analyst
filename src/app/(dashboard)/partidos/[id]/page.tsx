@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/page-header";
+
 export default async function PartidoDetallePage({
   params,
 }: {
@@ -6,11 +8,9 @@ export default async function PartidoDetallePage({
   const { id } = await params;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Detalle de partido</h1>
-      <p className="mt-2 text-sm text-foreground/60">
-        Alineación, eventos y estadísticas del partido {id}.
-      </p>
-    </div>
+    <PageHeader
+      title="Detalle de partido"
+      description={`Alineación, eventos y estadísticas del partido ${id}.`}
+    />
   );
 }

@@ -1,10 +1,10 @@
+import { PageHeader } from "@/components/page-header";
+
 export default function MedicoPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Área médica</h1>
-      <p className="mt-2 text-sm text-foreground/60">
-        Estado de disponibilidad del plantel: apto, duda, lesionado.
-      </p>
-    </div>
+    <PageHeader
+      title="Área médica"
+      description="Estado de disponibilidad del plantel: apto, duda, lesionado."
+    />
   );
 }
