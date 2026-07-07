@@ -8,7 +8,7 @@ export default async function HistorialMedicoPage({
   return (
     <div>
       <h1 className="text-2xl font-semibold">Historial médico</h1>
-      <p className="mt-2 text-sm text-black/60">
+      <p className="mt-2 text-sm text-foreground/60">
         Lesiones y chequeos del jugador {id}.
       </p>
     </div>

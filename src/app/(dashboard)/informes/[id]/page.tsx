@@ -8,7 +8,7 @@ export default async function InformeDetallePage({
   return (
     <div>
       <h1 className="text-2xl font-semibold">Informe</h1>
-      <p className="mt-2 text-sm text-black/60">Contenido del informe {id}.</p>
+      <p className="mt-2 text-sm text-foreground/60">Contenido del informe {id}.</p>
     </div>
   );
 }

@@ -34,19 +34,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <form
         onSubmit={handleSubmit}
-        className="flex w-80 flex-col gap-3 rounded-lg border border-black/10 p-6"
+        className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-surface p-6 shadow-sm"
       >
-        <h1 className="text-xl font-semibold">Iniciar sesión</h1>
+        <h1 className="text-xl font-semibold text-primary">
+          Nacional · Cuerpo Técnico
+        </h1>
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="rounded border border-black/20 px-3 py-2 text-sm"
+          className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
         />
         <input
           type="password"
@@ -54,13 +56,13 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="rounded border border-black/20 px-3 py-2 text-sm"
+          className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-accent">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-black px-3 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
         >
           {loading ? "Ingresando..." : "Ingresar"}
         </button>

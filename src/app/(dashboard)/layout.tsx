@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -17,22 +20,36 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r border-black/10 p-4">
+      <aside className="w-60 shrink-0 bg-primary p-4">
+        <div className="px-3 pb-6 pt-2 text-lg font-semibold text-white">
+          Nacional <span className="text-accent">·</span> Cuerpo Técnico
+        </div>
         <nav className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded px-3 py-2 text-sm hover:bg-black/5"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`rounded-md border-l-2 px-3 py-2 text-sm transition-colors ${
+                  isActive
+                    ? "border-accent bg-white/10 font-medium text-white"
+                    : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 bg-background p-8">{children}</main>
     </div>
   );
 }

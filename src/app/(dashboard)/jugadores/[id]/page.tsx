@@ -8,7 +8,7 @@ export default async function JugadorDetallePage({
   return (
     <div>
       <h1 className="text-2xl font-semibold">Ficha del jugador</h1>
-      <p className="mt-2 text-sm text-black/60">
+      <p className="mt-2 text-sm text-foreground/60">
         Datos personales, físicos, médicos, estadísticas y videos del jugador {id}.
       </p>
     </div>

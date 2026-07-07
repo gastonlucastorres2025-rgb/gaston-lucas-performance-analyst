@@ -8,7 +8,7 @@ export default async function VideoDetallePage({
   return (
     <div>
       <h1 className="text-2xl font-semibold">Video</h1>
-      <p className="mt-2 text-sm text-black/60">
+      <p className="mt-2 text-sm text-foreground/60">
         Reproductor y etiquetas tácticas del video {id}.
       </p>
     </div>

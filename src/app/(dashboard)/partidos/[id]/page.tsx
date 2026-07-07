@@ -8,7 +8,7 @@ export default async function PartidoDetallePage({
   return (
     <div>
       <h1 className="text-2xl font-semibold">Detalle de partido</h1>
-      <p className="mt-2 text-sm text-black/60">
+      <p className="mt-2 text-sm text-foreground/60">
         Alineación, eventos y estadísticas del partido {id}.
       </p>
     </div>
