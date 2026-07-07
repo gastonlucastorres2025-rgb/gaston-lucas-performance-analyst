@@ -13,7 +13,9 @@ export default async function JugadoresPage() {
   const [{ data: players }, { data: physicalData }] = await Promise.all([
     supabase
       .from("players")
-      .select("id, dorsal, nombre, apellido, posicion_principal, nacionalidad, estado, foto_url")
+      .select(
+        "id, dorsal, nombre, apellido, posicion_principal, nacionalidad, estado, foto_url, transfermarkt_url",
+      )
       .order("dorsal", { ascending: true, nullsFirst: false }),
     supabase
       .from("player_physical_data")
@@ -54,6 +56,7 @@ export default async function JugadoresPage() {
               <th className="px-4 py-3">Altura</th>
               <th className="px-4 py-3">Peso</th>
               <th className="px-4 py-3">Estado</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -108,6 +111,19 @@ export default async function JugadoresPage() {
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                       {player.estado}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {player.transfermarkt_url && (
+                      <a
+                        href={player.transfermarkt_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Ver en Transfermarkt"
+                        className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
+                      >
+                        TM ↗
+                      </a>
+                    )}
                   </td>
                 </tr>
               );
