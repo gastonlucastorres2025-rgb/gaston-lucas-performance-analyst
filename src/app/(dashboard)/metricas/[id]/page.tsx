@@ -40,35 +40,47 @@ export default async function MetricaDetallePage({
         description={`${fechaTexto}${m.competencia ? ` · ${m.competencia}` : ""}`}
       />
 
-      <div className="mb-6 flex items-center justify-center gap-10 rounded-lg border border-border bg-surface p-8">
-        <div className="flex flex-col items-center gap-2">
+      <div className="mb-6 flex items-center justify-center gap-6 rounded-lg border border-border bg-surface p-5">
+        <div className="flex flex-col items-center gap-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/escudo-nacional.png" alt="Nacional" className="h-16 w-16 object-contain" />
-          <p className="text-sm font-semibold">Nacional</p>
-          <p className="text-xs text-foreground/50">{nac.formacion as string}</p>
+          <img src="/escudo-nacional.png" alt="Nacional" className="h-10 w-10 object-contain" />
+          <p className="text-xs font-semibold">Nacional</p>
+          <p className="text-[10px] text-foreground/50">{nac.formacion as string}</p>
         </div>
-        <p className="font-mono text-4xl font-bold">
+        <p className="font-mono text-3xl font-bold">
           {m.goles_favor} - {m.goles_contra}
         </p>
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-1">
           {m.escudo_rival_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.escudo_rival_url} alt={m.rival} className="h-16 w-16 object-contain" />
+            <img src={m.escudo_rival_url} alt={m.rival} className="h-10 w-10 object-contain" />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-lg font-semibold text-accent">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent">
               {m.rival.slice(0, 2).toUpperCase()}
             </div>
           )}
-          <p className="text-sm font-semibold">{m.rival}</p>
-          <p className="text-xs text-foreground/50">{riv.formacion as string}</p>
+          <p className="text-xs font-semibold">{m.rival}</p>
+          <p className="text-[10px] text-foreground/50">{riv.formacion as string}</p>
         </div>
+      </div>
+
+      <div className="mb-6 flex items-center justify-center gap-4 text-xs text-foreground/60">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Mejor que el rival
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-amber-400" /> Similar
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-accent" /> Peor que el rival
+        </span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <StatSection title="Resumen">
           <StatCompareRow label="xG" nacional={nac.xg as number} rival={riv.xg as number} />
           <StatCompareRow label="Posesión %" nacional={nac.posesion as number} rival={riv.posesion as number} suffix="%" />
-          <StatCompareRow label="PPDA (presión)" nacional={nac.ppda as number} rival={riv.ppda as number} />
+          <StatCompareRow label="PPDA (presión)" nacional={nac.ppda as number} rival={riv.ppda as number} invert />
         </StatSection>
 
         <StatSection title="Ofensiva">
@@ -88,16 +100,16 @@ export default async function MetricaDetallePage({
         </StatSection>
 
         <StatSection title="Defensiva">
-          <StatCompareRow label="Tiros en contra" nacional={group(nac, "tiros_en_contra").total} rival={group(riv, "tiros_en_contra").total} />
+          <StatCompareRow label="Tiros en contra" nacional={group(nac, "tiros_en_contra").total} rival={group(riv, "tiros_en_contra").total} invert />
           <StatCompareRow label="Duelos defensivos ganados" nacional={group(nac, "duelos_defensivos").ganados} rival={group(riv, "duelos_defensivos").ganados} />
           <StatCompareRow label="Balones recuperados" nacional={group(nac, "balones_recuperados").total} rival={group(riv, "balones_recuperados").total} />
-          <StatCompareRow label="Balones perdidos" nacional={group(nac, "balones_perdidos").total} rival={group(riv, "balones_perdidos").total} />
+          <StatCompareRow label="Balones perdidos" nacional={group(nac, "balones_perdidos").total} rival={group(riv, "balones_perdidos").total} invert />
         </StatSection>
 
         <StatSection title="Disciplina">
-          <StatCompareRow label="Faltas" nacional={nac.faltas as number} rival={riv.faltas as number} />
-          <StatCompareRow label="Tarjetas amarillas" nacional={nac.amarillas as number} rival={riv.amarillas as number} />
-          <StatCompareRow label="Tarjetas rojas" nacional={nac.rojas as number} rival={riv.rojas as number} />
+          <StatCompareRow label="Faltas" nacional={nac.faltas as number} rival={riv.faltas as number} invert />
+          <StatCompareRow label="Tarjetas amarillas" nacional={nac.amarillas as number} rival={riv.amarillas as number} invert />
+          <StatCompareRow label="Tarjetas rojas" nacional={nac.rojas as number} rival={riv.rojas as number} invert />
         </StatSection>
 
         <StatSection title="Duelos">
@@ -111,7 +123,7 @@ export default async function MetricaDetallePage({
 
 function StatSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground/50">
         {title}
       </h3>
