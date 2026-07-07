@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MetricasCharts } from "@/components/metricas-charts";
 import { MetricasTabs } from "@/components/metricas-tabs";
 import { PageHeader } from "@/components/page-header";
 import { parseDateKey } from "@/lib/calendar-utils";
@@ -12,33 +11,17 @@ export default async function MetricasPage() {
   const { data: matches } = await supabase
     .from("match_stats")
     .select(
-      "id, fecha, rival, competencia, condicion, escudo_rival_url, goles_favor, goles_contra, xg_favor, xg_contra, posesion",
+      "id, fecha, rival, competencia, condicion, escudo_rival_url, goles_favor, goles_contra",
     )
     .order("fecha", { ascending: true });
 
   const rows = matches ?? [];
-
-  const chartData = rows.map((m) => ({
-    fecha: m.fecha,
-    rival: m.rival,
-    golesFavor: m.goles_favor ?? 0,
-    golesContra: m.goles_contra ?? 0,
-    xgFavor: Number((m.xg_favor ?? 0).toFixed(2)),
-    xgContra: Number((m.xg_contra ?? 0).toFixed(2)),
-    posesion: Number((m.posesion ?? 0).toFixed(1)),
-  }));
 
   const ganados = rows.filter((m) => (m.goles_favor ?? 0) > (m.goles_contra ?? 0)).length;
   const empatados = rows.filter((m) => (m.goles_favor ?? 0) === (m.goles_contra ?? 0)).length;
   const perdidos = rows.filter((m) => (m.goles_favor ?? 0) < (m.goles_contra ?? 0)).length;
   const golesFavor = rows.reduce((sum, m) => sum + (m.goles_favor ?? 0), 0);
   const golesContra = rows.reduce((sum, m) => sum + (m.goles_contra ?? 0), 0);
-  const posesionProm = rows.length
-    ? rows.reduce((sum, m) => sum + (m.posesion ?? 0), 0) / rows.length
-    : 0;
-  const xgProm = rows.length
-    ? rows.reduce((sum, m) => sum + (m.xg_favor ?? 0), 0) / rows.length
-    : 0;
 
   return (
     <div>
@@ -48,16 +31,10 @@ export default async function MetricasPage() {
       />
       <MetricasTabs />
 
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-5">
+      <div className="mb-8 grid grid-cols-3 gap-4">
         <SummaryCard icon="⚽" label="Partidos" value={String(rows.length)} />
         <SummaryCard icon="🏆" label="Récord (G-E-P)" value={`${ganados}-${empatados}-${perdidos}`} />
         <SummaryCard icon="🥅" label="Goles (F-C)" value={`${golesFavor}-${golesContra}`} />
-        <SummaryCard icon="🎯" label="Posesión prom." value={`${posesionProm.toFixed(1)}%`} />
-        <SummaryCard icon="📊" label="xG promedio" value={xgProm.toFixed(2)} />
-      </div>
-
-      <div className="mb-8">
-        <MetricasCharts data={chartData} />
       </div>
 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/50">

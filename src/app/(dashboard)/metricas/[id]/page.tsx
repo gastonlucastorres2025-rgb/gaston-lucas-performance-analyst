@@ -2,15 +2,37 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { StatCompareRow } from "@/components/stat-compare-row";
 import { parseDateKey } from "@/lib/calendar-utils";
+import {
+  CONSTRUCCION_METRICS,
+  DEFENSIVA_METRICS,
+  OFENSIVA_METRICS,
+  type MetricDef,
+} from "@/lib/metricas-config";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type StatGroup = { total?: number; ganados?: number; logrados?: number; a_puerta?: number; precisos?: number; con_remate?: number; pct?: number; pct_puerta?: number };
+const RESUMEN_METRICS: MetricDef[] = [
+  { key: "xg", label: "xG", extract: (s) => (typeof s.xg === "number" ? s.xg : null) },
+  {
+    key: "posesion",
+    label: "Posesión",
+    suffix: "%",
+    extract: (s) => (typeof s.posesion === "number" ? s.posesion : null),
+  },
+  {
+    key: "ppda",
+    label: "PPDA (presión)",
+    invert: true,
+    extract: (s) => (typeof s.ppda === "number" ? s.ppda : null),
+  },
+];
 
-function group(row: Record<string, unknown> | null | undefined, key: string): StatGroup {
-  return (row?.[key] as StatGroup) ?? {};
-}
+const OFENSIVA_DETALLE = OFENSIVA_METRICS.filter((m) => !["goles", "xg"].includes(m.key));
+const DEFENSIVA_DETALLE = DEFENSIVA_METRICS.filter(
+  (m) => !["goles_recibidos", "ppda"].includes(m.key),
+);
+const CONSTRUCCION_DETALLE = CONSTRUCCION_METRICS.filter((m) => m.key !== "posesion");
 
 export default async function MetricaDetallePage({
   params,
@@ -34,97 +56,116 @@ export default async function MetricaDetallePage({
   });
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       <PageHeader
         title={m.condicion === "local" ? `Nacional vs ${m.rival}` : `${m.rival} vs Nacional`}
         description={`${fechaTexto}${m.competencia ? ` · ${m.competencia}` : ""}`}
       />
 
-      <div className="mb-6 flex items-center justify-center gap-6 rounded-lg border border-border bg-surface p-5">
+      <div className="mb-6 flex items-center justify-center gap-4 rounded-lg border border-border bg-surface p-4">
         <div className="flex flex-col items-center gap-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/escudo-nacional.png" alt="Nacional" className="h-10 w-10 object-contain" />
+          <img src="/escudo-nacional.png" alt="Nacional" className="h-7 w-7 object-contain" />
           <p className="text-xs font-semibold">Nacional</p>
-          <p className="text-[10px] text-foreground/50">{nac.formacion as string}</p>
         </div>
-        <p className="font-mono text-3xl font-bold">
+        <p className="font-mono text-2xl font-bold">
           {m.goles_favor} - {m.goles_contra}
         </p>
         <div className="flex flex-col items-center gap-1">
           {m.escudo_rival_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.escudo_rival_url} alt={m.rival} className="h-10 w-10 object-contain" />
+            <img src={m.escudo_rival_url} alt={m.rival} className="h-7 w-7 object-contain" />
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/10 text-[10px] font-semibold text-accent">
               {m.rival.slice(0, 2).toUpperCase()}
             </div>
           )}
           <p className="text-xs font-semibold">{m.rival}</p>
-          <p className="text-[10px] text-foreground/50">{riv.formacion as string}</p>
         </div>
       </div>
 
-      <div className="mb-6 flex items-center justify-center gap-4 text-xs text-foreground/60">
+      <div className="mb-5 flex items-center justify-center gap-4 text-xs text-foreground/60">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Mejor que el rival
+          <span className="h-2 w-2 rounded-full bg-emerald-500" /> Mejor
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-amber-400" /> Similar
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-accent" /> Peor que el rival
+          <span className="h-2 w-2 rounded-full bg-accent" /> Peor
         </span>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <StatSection title="Resumen">
-          <StatCompareRow label="xG" nacional={nac.xg as number} rival={riv.xg as number} />
-          <StatCompareRow label="Posesión %" nacional={nac.posesion as number} rival={riv.posesion as number} suffix="%" />
-          <StatCompareRow label="PPDA (presión)" nacional={nac.ppda as number} rival={riv.ppda as number} invert />
-        </StatSection>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Quadrant icon="📋" title="Resumen">
+          {RESUMEN_METRICS.map((metric) => (
+            <StatCompareRow
+              key={metric.key}
+              label={metric.label}
+              nacional={metric.extract(nac)}
+              rival={metric.extract(riv)}
+              suffix={metric.suffix}
+              invert={metric.invert}
+            />
+          ))}
+        </Quadrant>
 
-        <StatSection title="Ofensiva">
-          <StatCompareRow label="Tiros" nacional={group(nac, "tiros").total} rival={group(riv, "tiros").total} />
-          <StatCompareRow label="Tiros a puerta" nacional={group(nac, "tiros").a_puerta} rival={group(riv, "tiros").a_puerta} />
-          <StatCompareRow label="Córners" nacional={group(nac, "corners").total} rival={group(riv, "corners").total} />
-          <StatCompareRow label="Centros precisos" nacional={group(nac, "centros").precisos} rival={group(riv, "centros").precisos} />
-          <StatCompareRow label="Duelos ofensivos ganados" nacional={group(nac, "duelos_ofensivos").ganados} rival={group(riv, "duelos_ofensivos").ganados} />
-        </StatSection>
+        <Quadrant icon="⚔️" title="Ofensiva">
+          {OFENSIVA_DETALLE.map((metric) => (
+            <StatCompareRow
+              key={metric.key}
+              label={metric.label}
+              nacional={metric.extract(nac)}
+              rival={metric.extract(riv)}
+              suffix={metric.suffix}
+              invert={metric.invert}
+            />
+          ))}
+        </Quadrant>
 
-        <StatSection title="Pases">
-          <StatCompareRow label="Pases totales" nacional={group(nac, "pases").total} rival={group(riv, "pases").total} />
-          <StatCompareRow label="Pases logrados" nacional={group(nac, "pases").logrados} rival={group(riv, "pases").logrados} />
-          <StatCompareRow label="Pases último tercio" nacional={group(nac, "pases_ultimo_tercio").logrados} rival={group(riv, "pases_ultimo_tercio").logrados} />
-          <StatCompareRow label="Pases progresivos" nacional={group(nac, "pases_progresivos").precisos} rival={group(riv, "pases_progresivos").precisos} />
-          <StatCompareRow label="Pases en profundidad" nacional={nac.pases_profundidad as number} rival={riv.pases_profundidad as number} />
-        </StatSection>
+        <Quadrant icon="🛡️" title="Defensiva">
+          {DEFENSIVA_DETALLE.map((metric) => (
+            <StatCompareRow
+              key={metric.key}
+              label={metric.label}
+              nacional={metric.extract(nac)}
+              rival={metric.extract(riv)}
+              suffix={metric.suffix}
+              invert={metric.invert}
+            />
+          ))}
+        </Quadrant>
 
-        <StatSection title="Defensiva">
-          <StatCompareRow label="Tiros en contra" nacional={group(nac, "tiros_en_contra").total} rival={group(riv, "tiros_en_contra").total} invert />
-          <StatCompareRow label="Duelos defensivos ganados" nacional={group(nac, "duelos_defensivos").ganados} rival={group(riv, "duelos_defensivos").ganados} />
-          <StatCompareRow label="Balones recuperados" nacional={group(nac, "balones_recuperados").total} rival={group(riv, "balones_recuperados").total} />
-          <StatCompareRow label="Balones perdidos" nacional={group(nac, "balones_perdidos").total} rival={group(riv, "balones_perdidos").total} invert />
-        </StatSection>
-
-        <StatSection title="Disciplina">
-          <StatCompareRow label="Faltas" nacional={nac.faltas as number} rival={riv.faltas as number} invert />
-          <StatCompareRow label="Tarjetas amarillas" nacional={nac.amarillas as number} rival={riv.amarillas as number} invert />
-          <StatCompareRow label="Tarjetas rojas" nacional={nac.rojas as number} rival={riv.rojas as number} invert />
-        </StatSection>
-
-        <StatSection title="Duelos">
-          <StatCompareRow label="Duelos totales ganados" nacional={group(nac, "duelos").ganados} rival={group(riv, "duelos").ganados} />
-          <StatCompareRow label="Jugadas a balón parado con remate" nacional={group(nac, "balon_parado").con_remate} rival={group(riv, "balon_parado").con_remate} />
-        </StatSection>
+        <Quadrant icon="🎯" title="Construcción">
+          {CONSTRUCCION_DETALLE.map((metric) => (
+            <StatCompareRow
+              key={metric.key}
+              label={metric.label}
+              nacional={metric.extract(nac)}
+              rival={metric.extract(riv)}
+              suffix={metric.suffix}
+              invert={metric.invert}
+            />
+          ))}
+        </Quadrant>
       </div>
     </div>
   );
 }
 
-function StatSection({ title, children }: { title: string; children: React.ReactNode }) {
+function Quadrant({
+  icon,
+  title,
+  children,
+}: {
+  icon: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground/50">
+      <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground/50">
+        <span>{icon}</span>
         {title}
       </h3>
       <div className="divide-y divide-border">{children}</div>
