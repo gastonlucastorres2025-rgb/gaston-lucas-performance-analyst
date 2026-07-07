@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MetricasCharts } from "@/components/metricas-charts";
+import { MetricasTabs } from "@/components/metricas-tabs";
 import { PageHeader } from "@/components/page-header";
 import { parseDateKey } from "@/lib/calendar-utils";
 import { createClient } from "@/lib/supabase/server";
@@ -45,6 +46,7 @@ export default async function MetricasPage() {
         title="Métricas de Rendimiento"
         description="Estadísticas de equipo por partido: Nacional vs. cada rival."
       />
+      <MetricasTabs />
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-5">
         <SummaryCard icon="⚽" label="Partidos" value={String(rows.length)} />
