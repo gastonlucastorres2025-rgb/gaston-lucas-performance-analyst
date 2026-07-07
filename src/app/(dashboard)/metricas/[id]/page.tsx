@@ -6,6 +6,7 @@ import {
   CONSTRUCCION_METRICS,
   DEFENSIVA_METRICS,
   OFENSIVA_METRICS,
+  SEASON_START_DATE,
   type MetricDef,
 } from "@/lib/metricas-config";
 import { createClient } from "@/lib/supabase/server";
@@ -43,7 +44,7 @@ export default async function MetricaDetallePage({
   const supabase = await createClient();
   const { data: m } = await supabase.from("match_stats").select("*").eq("id", id).maybeSingle();
 
-  if (!m) notFound();
+  if (!m || m.fecha < SEASON_START_DATE) notFound();
 
   const nac = m.stats_nacional as Record<string, unknown>;
   const riv = m.stats_rival as Record<string, unknown>;

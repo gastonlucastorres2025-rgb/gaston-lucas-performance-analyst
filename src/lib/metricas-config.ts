@@ -1,3 +1,5 @@
+export const SEASON_START_DATE = "2026-03-25"; // debut del cuerpo técnico actual (vs. Cerro Largo)
+
 type Stats = Record<string, unknown>;
 
 function num(v: unknown): number | null {

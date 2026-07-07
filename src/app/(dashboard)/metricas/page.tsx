@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MetricasTabs } from "@/components/metricas-tabs";
 import { PageHeader } from "@/components/page-header";
 import { parseDateKey } from "@/lib/calendar-utils";
+import { SEASON_START_DATE } from "@/lib/metricas-config";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export default async function MetricasPage() {
     .select(
       "id, fecha, rival, competencia, condicion, escudo_rival_url, goles_favor, goles_contra",
     )
+    .gte("fecha", SEASON_START_DATE)
     .order("fecha", { ascending: true });
 
   const rows = matches ?? [];
