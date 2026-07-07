@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/jugadores", label: "Lista" },
-  { href: "/jugadores/posiciones", label: "Posiciones" },
+  { href: "/jugadores/estructura", label: "Estructura" },
 ];
 
 export function JugadoresTabs() {

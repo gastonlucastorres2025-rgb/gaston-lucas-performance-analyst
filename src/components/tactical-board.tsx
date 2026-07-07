@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PitchSvg } from "@/components/pitch-svg";
 import { initials } from "@/lib/player-utils";
 
@@ -14,81 +14,37 @@ type Player = {
   dorsal: number | null;
   posicion_principal: Category | null;
   foto_url: string | null;
+  altura: number | null;
 };
 
-type Slot = {
-  id: string;
-  label: string;
-  category: Category;
-  x: number;
-  y: number;
+const CATEGORY_ORDER: Category[] = [
+  "Portero",
+  "Defensor",
+  "Mediocampista",
+  "Delantero",
+];
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  Portero: "Porteros",
+  Defensor: "Defensores",
+  Mediocampista: "Mediocampistas",
+  Delantero: "Delanteros",
 };
 
-const FORMATIONS: Record<string, Slot[]> = {
-  "4-3-3": [
-    { id: "gk", label: "POR", category: "Portero", x: 50, y: 90 },
-    { id: "lb", label: "LI", category: "Defensor", x: 15, y: 72 },
-    { id: "cb1", label: "DFC", category: "Defensor", x: 37, y: 77 },
-    { id: "cb2", label: "DFC", category: "Defensor", x: 63, y: 77 },
-    { id: "rb", label: "LD", category: "Defensor", x: 85, y: 72 },
-    { id: "cm1", label: "MC", category: "Mediocampista", x: 28, y: 52 },
-    { id: "cm2", label: "MC", category: "Mediocampista", x: 50, y: 56 },
-    { id: "cm3", label: "MC", category: "Mediocampista", x: 72, y: 52 },
-    { id: "lw", label: "EI", category: "Delantero", x: 18, y: 24 },
-    { id: "st", label: "DC", category: "Delantero", x: 50, y: 16 },
-    { id: "rw", label: "ED", category: "Delantero", x: 82, y: 24 },
-  ],
-  "4-2-3-1": [
-    { id: "gk", label: "POR", category: "Portero", x: 50, y: 90 },
-    { id: "lb", label: "LI", category: "Defensor", x: 15, y: 72 },
-    { id: "cb1", label: "DFC", category: "Defensor", x: 37, y: 77 },
-    { id: "cb2", label: "DFC", category: "Defensor", x: 63, y: 77 },
-    { id: "rb", label: "LD", category: "Defensor", x: 85, y: 72 },
-    { id: "dm1", label: "MCD", category: "Mediocampista", x: 36, y: 60 },
-    { id: "dm2", label: "MCD", category: "Mediocampista", x: 64, y: 60 },
-    { id: "lam", label: "MI", category: "Mediocampista", x: 18, y: 38 },
-    { id: "cam", label: "MCO", category: "Mediocampista", x: 50, y: 34 },
-    { id: "ram", label: "MD", category: "Mediocampista", x: 82, y: 38 },
-    { id: "st", label: "DC", category: "Delantero", x: 50, y: 14 },
-  ],
-};
-
-function autoFill(players: Player[], slots: Slot[]) {
-  const byCategory = new Map<Category, Player[]>();
-  for (const player of players) {
-    const category = player.posicion_principal ?? "Delantero";
-    const list = byCategory.get(category) ?? [];
-    list.push(player);
-    byCategory.set(category, list);
-  }
-  for (const list of byCategory.values()) {
-    list.sort((a, b) => (a.dorsal ?? 999) - (b.dorsal ?? 999));
-  }
-
-  const assignments: Record<string, string | null> = {};
-  const used = new Set<string>();
-
-  for (const slot of slots) {
-    const pool = byCategory.get(slot.category) ?? [];
-    const candidate = pool.find((p) => !used.has(p.id));
-    assignments[slot.id] = candidate?.id ?? null;
-    if (candidate) used.add(candidate.id);
-  }
-
-  return assignments;
+function dragPayload(playerId: string) {
+  return JSON.stringify({ playerId });
 }
 
-function dragPayload(playerId: string, fromSlotId: string | null) {
-  return JSON.stringify({ playerId, fromSlotId });
+function readDragPayload(e: React.DragEvent): string | null {
+  try {
+    const { playerId } = JSON.parse(e.dataTransfer.getData("text/plain"));
+    return playerId ?? null;
+  } catch {
+    return null;
+  }
 }
 
-function PlayerAvatar({
-  player,
-  size,
-}: {
-  player: Player;
-  size: number;
-}) {
+function PlayerAvatar({ player, size }: { player: Player; size: number }) {
   if (player.foto_url) {
     return (
       <Image
@@ -96,14 +52,15 @@ function PlayerAvatar({
         alt={`${player.nombre} ${player.apellido}`}
         width={size}
         height={size}
-        className="rounded-full object-cover ring-2 ring-white/80"
+        draggable={false}
+        className="pointer-events-none rounded-full object-cover ring-2 ring-white/80 select-none"
         style={{ width: size, height: size }}
       />
     );
   }
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-primary/80 font-semibold text-white ring-2 ring-white/80"
+      className="pointer-events-none flex items-center justify-center rounded-full bg-primary/80 font-semibold text-white ring-2 ring-white/80 select-none"
       style={{ width: size, height: size, fontSize: size * 0.35 }}
     >
       {initials(player.nombre, player.apellido)}
@@ -112,178 +69,137 @@ function PlayerAvatar({
 }
 
 export function TacticalBoard({ players }: { players: Player[] }) {
-  const [formationKey, setFormationKey] = useState<keyof typeof FORMATIONS>("4-3-3");
-  const [appliedFormationKey, setAppliedFormationKey] = useState(formationKey);
-  const [assignments, setAssignments] = useState<Record<string, string | null>>(() =>
-    autoFill(players, FORMATIONS[formationKey]),
-  );
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
 
-  const slots = FORMATIONS[formationKey];
+  const playersById = new Map(players.map((p) => [p.id, p]));
+  const placedIds = new Set(Object.keys(positions));
 
-  if (formationKey !== appliedFormationKey) {
-    setAppliedFormationKey(formationKey);
-    setAssignments(autoFill(players, slots));
+  function handlePitchDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const playerId = readDragPayload(e);
+    if (!playerId) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(96, Math.max(4, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(96, Math.max(4, ((e.clientY - rect.top) / rect.height) * 100));
+
+    setPositions((prev) => ({ ...prev, [playerId]: { x, y } }));
   }
 
-  const playersById = useMemo(() => {
-    const map = new Map<string, Player>();
-    for (const player of players) map.set(player.id, player);
-    return map;
-  }, [players]);
-
-  const assignedIds = useMemo(
-    () => new Set(Object.values(assignments).filter(Boolean) as string[]),
-    [assignments],
-  );
-
-  const bench = useMemo(
-    () =>
-      players
-        .filter((p) => !assignedIds.has(p.id))
-        .sort((a, b) => (a.dorsal ?? 999) - (b.dorsal ?? 999)),
-    [players, assignedIds],
-  );
-
-  function handleDropOnSlot(e: React.DragEvent, slotId: string) {
+  function handleRosterDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
-    const { playerId, fromSlotId } = JSON.parse(
-      e.dataTransfer.getData("text/plain"),
-    ) as { playerId: string; fromSlotId: string | null };
+    const playerId = readDragPayload(e);
+    if (!playerId) return;
 
-    setAssignments((prev) => {
+    setPositions((prev) => {
       const next = { ...prev };
-      const displaced = next[slotId] ?? null;
-      next[slotId] = playerId;
-      if (fromSlotId) {
-        next[fromSlotId] = displaced;
-      }
+      delete next[playerId];
       return next;
     });
   }
 
-  function handleDropOnBench(e: React.DragEvent) {
-    e.preventDefault();
-    const { fromSlotId } = JSON.parse(e.dataTransfer.getData("text/plain")) as {
-      playerId: string;
-      fromSlotId: string | null;
-    };
-    if (!fromSlotId) return;
-    setAssignments((prev) => ({ ...prev, [fromSlotId]: null }));
-  }
+  const grouped = CATEGORY_ORDER.map((category) => ({
+    category,
+    players: players
+      .filter((p) => (p.posicion_principal ?? "Delantero") === category)
+      .sort((a, b) => (a.dorsal ?? 999) - (b.dorsal ?? 999)),
+  })).filter((group) => group.players.length > 0);
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <div className="flex-1">
-        <div className="mb-4 flex gap-2">
-          {Object.keys(FORMATIONS).map((key) => (
-            <button
-              key={key}
-              onClick={() => setFormationKey(key)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                formationKey === key
-                  ? "bg-primary text-white"
-                  : "border border-border bg-surface text-foreground/70 hover:bg-primary/5"
-              }`}
+    <div>
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handlePitchDrop}
+        className="relative mx-auto w-full max-w-[360px] overflow-hidden rounded-lg shadow-sm"
+        style={{
+          aspectRatio: "2 / 3",
+          background:
+            "repeating-linear-gradient(180deg, #2f8f4e 0, #2f8f4e 10%, #33995284 10%, #339952 20%)",
+        }}
+      >
+        <PitchSvg />
+
+        <Image
+          src="/escudo-nacional.png"
+          alt=""
+          width={200}
+          height={200}
+          draggable={false}
+          className="pointer-events-none absolute top-1/2 left-1/2 w-[55%] -translate-x-1/2 -translate-y-1/2 opacity-[0.28] select-none"
+        />
+
+        {Object.entries(positions).map(([playerId, pos]) => {
+          const player = playersById.get(playerId);
+          if (!player) return null;
+
+          return (
+            <div
+              key={playerId}
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData("text/plain", dragPayload(playerId))}
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 cursor-grab flex-col items-center gap-1 active:cursor-grabbing"
+              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
             >
-              {key}
-            </button>
-          ))}
-        </div>
-
-        <div
-          className="relative mx-auto w-full max-w-xl overflow-hidden rounded-lg shadow-sm"
-          style={{
-            aspectRatio: "2 / 3",
-            background:
-              "repeating-linear-gradient(180deg, #2f8f4e 0, #2f8f4e 10%, #33995284 10%, #339952 20%)",
-          }}
-        >
-          <PitchSvg />
-
-          {slots.map((slot) => {
-            const player = assignments[slot.id]
-              ? playersById.get(assignments[slot.id] as string)
-              : null;
-
-            return (
-              <div
-                key={slot.id}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDropOnSlot(e, slot.id)}
-                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-                style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-              >
-                {player ? (
-                  <div
-                    draggable
-                    onDragStart={(e) =>
-                      e.dataTransfer.setData(
-                        "text/plain",
-                        dragPayload(player.id, slot.id),
-                      )
-                    }
-                    className="flex cursor-grab flex-col items-center active:cursor-grabbing"
-                  >
-                    <div className="relative">
-                      <PlayerAvatar player={player} size={40} />
-                      {player.dorsal && (
-                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white ring-1 ring-white">
-                          {player.dorsal}
-                        </span>
-                      )}
-                    </div>
-                    <span className="mt-0.5 max-w-[70px] truncate rounded bg-black/40 px-1 text-[10px] font-medium leading-tight text-white">
-                      {player.apellido}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-white/60 text-[9px] font-medium text-white/70">
-                    {slot.label}
-                  </div>
+              <div className="relative">
+                <PlayerAvatar player={player} size={34} />
+                {player.dorsal && (
+                  <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white ring-1 ring-white">
+                    {player.dorsal}
+                  </span>
                 )}
               </div>
-            );
-          })}
-        </div>
+              <span className="pointer-events-none max-w-[64px] truncate rounded bg-black/40 px-1 text-[10px] font-medium leading-tight text-white select-none">
+                {player.apellido}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      <aside className="w-full shrink-0 lg:w-60">
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground/60">
-          Plantel disponible
-        </h3>
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDropOnBench}
-          className="flex max-h-[600px] flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-surface p-2"
-        >
-          {bench.length === 0 && (
-            <p className="p-2 text-sm text-foreground/50">
-              Todos los jugadores están en cancha.
-            </p>
-          )}
-          {bench.map((player) => (
-            <div
-              key={player.id}
-              draggable
-              onDragStart={(e) =>
-                e.dataTransfer.setData("text/plain", dragPayload(player.id, null))
-              }
-              className="flex cursor-grab items-center gap-2 rounded-md px-2 py-1.5 hover:bg-primary/5 active:cursor-grabbing"
-            >
-              <PlayerAvatar player={player} size={28} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">
-                  {player.nombre} {player.apellido}
-                </p>
-                <p className="text-xs text-foreground/50">
-                  {player.posicion_principal}
-                  {player.dorsal ? ` · #${player.dorsal}` : ""}
-                </p>
-              </div>
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleRosterDrop}
+        className="mt-8 space-y-6"
+      >
+        {grouped.map((group) => (
+          <div key={group.category}>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground/60">
+              {CATEGORY_LABEL[group.category]}
+            </h3>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {group.players.map((player) => {
+                const isPlaced = placedIds.has(player.id);
+                return (
+                  <div
+                    key={player.id}
+                    draggable
+                    onDragStart={(e) =>
+                      e.dataTransfer.setData("text/plain", dragPayload(player.id))
+                    }
+                    className={`flex cursor-grab flex-col items-center gap-2 rounded-lg border bg-surface p-3 text-center transition-colors active:cursor-grabbing ${
+                      isPlaced ? "border-primary/40 bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <PlayerAvatar player={player} size={48} />
+                    <div>
+                      <p className="text-sm font-medium leading-tight">
+                        {player.nombre} {player.apellido}
+                      </p>
+                      <p className="mt-0.5 text-xs text-foreground/50">
+                        {player.posicion_principal}
+                        {player.dorsal ? ` · #${player.dorsal}` : ""}
+                      </p>
+                      <p className="text-xs text-foreground/50">
+                        {player.altura ? `${player.altura.toFixed(2)} m` : "Altura s/d"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </aside>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
