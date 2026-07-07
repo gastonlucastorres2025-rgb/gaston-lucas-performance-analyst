@@ -1,13 +1,11 @@
 import Image from "next/image";
+import { JugadoresTabs } from "@/components/jugadores-tabs";
 import { PageHeader } from "@/components/page-header";
 import { countryFlagClass } from "@/lib/country-flags";
+import { initials } from "@/lib/player-utils";
 import { createClient } from "@/lib/supabase/server";
 
 const POSITION_ORDER = ["Portero", "Defensor", "Mediocampista", "Delantero"];
-
-function initials(nombre: string, apellido: string) {
-  return `${nombre[0] ?? ""}${apellido[0] ?? ""}`.toUpperCase();
-}
 
 export default async function JugadoresPage() {
   const supabase = await createClient();
@@ -43,6 +41,7 @@ export default async function JugadoresPage() {
         title="Jugadores"
         description={`${sorted.length} jugadores en el plantel.`}
       />
+      <JugadoresTabs />
 
       <div className="overflow-hidden rounded-lg border border-border bg-surface">
         <table className="w-full text-sm">
