@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/jugadores", label: "Jugadores" },
   { href: "/entrenamientos", label: "Entrenamientos" },
   { href: "/partidos", label: "Partidos" },
+  { href: "/metricas", label: "Métricas de Rendimiento" },
   { href: "/scouting", label: "Scouting" },
   { href: "/medico", label: "Médico" },
   { href: "/videos", label: "Videos" },
