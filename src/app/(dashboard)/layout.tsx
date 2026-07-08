@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { TareasNotifier } from "@/components/tareas-notifier";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/metricas", label: "Métricas de Rendimiento" },
   { href: "/scouting", label: "Scouting" },
   { href: "/videos", label: "Videos" },
+  { href: "/tareas", label: "Tareas" },
   { href: "/configuracion/equipo", label: "Configuración" },
 ];
 
@@ -81,6 +83,7 @@ export default function DashboardLayout({
         </header>
         <main className="flex-1 bg-background px-8 py-8">{children}</main>
       </div>
+      <TareasNotifier />
     </div>
   );
 }
