@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/jugadores", label: "Jugadores" },
   { href: "/entrenamientos", label: "Entrenamientos" },
+  { href: "/planificacion", label: "Planificación" },
   { href: "/partidos", label: "Partidos" },
   { href: "/metricas", label: "Métricas de Rendimiento" },
   { href: "/scouting", label: "Scouting" },
