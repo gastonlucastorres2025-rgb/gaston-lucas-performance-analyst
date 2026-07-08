@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { EntrenamientoPdfButton } from "@/components/entrenamiento-pdf-button";
 import { PageHeader } from "@/components/page-header";
 import { SessionVideoPlayer } from "@/components/session-video-player";
 import { parseDateKey } from "@/lib/calendar-utils";
@@ -35,6 +36,20 @@ export default async function EntrenamientoDetallePage({
         title="Entrenamiento"
         description={`${fechaTexto}${session.turno ? ` · ${TURNO_LABEL[session.turno]}` : ""}`}
       />
+
+      <div className="mb-6 flex justify-end">
+        <EntrenamientoPdfButton
+          data={{
+            fecha: fechaTexto,
+            turno: session.turno ? TURNO_LABEL[session.turno] : null,
+            lugar: session.lugar,
+            rival: session.rival,
+            sesionCompletaUrl: session.sesionCompletaUrl,
+            gpsUrl: session.gpsUrl,
+            tareas: session.tareas,
+          }}
+        />
+      </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
         {session.lugar && (
