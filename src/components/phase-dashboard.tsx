@@ -52,6 +52,7 @@ export function PhaseDashboard({
 }) {
   const metrics = METRICS_BY_CATEGORY[category];
   const [selectedKey, setSelectedKey] = useState(metrics[0].key);
+  const [showRival, setShowRival] = useState(true);
   const selected = metrics.find((m) => m.key === selectedKey) ?? metrics[0];
 
   const chartData = useMemo(
@@ -94,7 +95,22 @@ export function PhaseDashboard({
         ))}
       </div>
 
-      <ChartCard title={`${selected.label}${selected.suffix ? ` (${selected.suffix})` : ""} por partido`} width={width}>
+      <ChartCard
+        title={`${selected.label}${selected.suffix ? ` (${selected.suffix})` : ""} por partido`}
+        width={width}
+        actions={
+          <button
+            onClick={() => setShowRival((v) => !v)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              showRival
+                ? "border-accent/30 bg-accent/10 text-accent hover:bg-accent/20"
+                : "border-border bg-surface text-foreground/50 hover:bg-primary/5"
+            }`}
+          >
+            {showRival ? "Ocultar rival" : "Mostrar rival"}
+          </button>
+        }
+      >
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={chartData} margin={{ left: -20, bottom: 60 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eef0f3" vertical={false} />
@@ -103,7 +119,9 @@ export function PhaseDashboard({
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, borderColor: "#e2e5ea" }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Line isAnimationActive={false} type="monotone" dataKey="nacional" name="Nacional" stroke="#0b3d91" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-            <Line isAnimationActive={false} type="monotone" dataKey="rivalValor" name="Rival" stroke="#d7263d" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            {showRival && (
+              <Line isAnimationActive={false} type="monotone" dataKey="rivalValor" name="Rival" stroke="#d7263d" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
