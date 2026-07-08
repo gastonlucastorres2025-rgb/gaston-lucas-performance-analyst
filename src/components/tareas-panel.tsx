@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, useState, useTransition } from "react";
 import { crearTarea, eliminarTarea, toggleTareaCompletada } from "@/lib/tareas-actions";
 
 type Tarea = {
@@ -32,22 +33,48 @@ function formatFechaHora(fecha: string, hora: string): string {
 }
 
 export function TareasPanel({ tareas }: { tareas: Tarea[] }) {
-  const [formState, formAction, pending] = useActionState(crearTarea, { error: null, success: false });
-  const [items, setItems] = useState(tareas);
-  const [, startTransition] = useTransition();
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [pending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [completadaOverrides, setCompletadaOverrides] = useState<Map<string, boolean>>(new Map());
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
+  const items = tareas
+    .filter((t) => !deletedIds.has(t.id))
+    .map((t) => (completadaOverrides.has(t.id) ? { ...t, completada: completadaOverrides.get(t.id)! } : t));
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    startTransition(async () => {
+      const result = await crearTarea({ error: null, success: false }, formData);
+      if (result.success) {
+        setFormError(null);
+        form.reset();
+        setShowForm(false);
+        router.refresh();
+      } else {
+        setFormError(result.error);
+      }
+    });
+  }
 
   function handleToggle(id: string, completada: boolean) {
-    setItems((prev) => prev.map((t) => (t.id === id ? { ...t, completada } : t)));
-    startTransition(() => {
-      toggleTareaCompletada(id, completada);
+    setCompletadaOverrides((prev) => new Map(prev).set(id, completada));
+    startTransition(async () => {
+      await toggleTareaCompletada(id, completada);
+      router.refresh();
     });
   }
 
   function handleDelete(id: string) {
-    setItems((prev) => prev.filter((t) => t.id !== id));
-    startTransition(() => {
-      eliminarTarea(id);
+    setDeletedIds((prev) => new Set(prev).add(id));
+    startTransition(async () => {
+      await eliminarTarea(id);
+      router.refresh();
     });
   }
 
@@ -82,10 +109,8 @@ export function TareasPanel({ tareas }: { tareas: Tarea[] }) {
 
       {showForm && (
         <form
-          action={(fd) => {
-            formAction(fd);
-            setShowForm(false);
-          }}
+          ref={formRef}
+          onSubmit={handleSubmit}
           className="mb-6 flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm"
         >
           <input
@@ -117,7 +142,7 @@ export function TareasPanel({ tareas }: { tareas: Tarea[] }) {
               className="w-32 rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
             />
           </div>
-          {formState.error && <p className="text-sm text-accent">{formState.error}</p>}
+          {formError && <p className="text-sm text-accent">{formError}</p>}
           <button
             type="submit"
             disabled={pending}
