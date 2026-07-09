@@ -1,12 +1,15 @@
 "use client";
 
 import { pdf } from "@react-pdf/renderer";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { SesionPdfDocument } from "@/components/sesion-pdf";
 import {
+  eliminarImagenPlan,
   guardarEquipos,
   guardarJugadoresEstado,
   guardarPlanSesion,
+  subirImagenPlan,
+  type CampoImagen,
   type Equipo,
   type EstadoJugador,
 } from "@/lib/sesiones-actions";
@@ -27,6 +30,9 @@ type Sesion = {
   principal: string | null;
   objetivos_tarea: string | null;
   objetivos_fisicos: string | null;
+  activacion_imagen_url: string | null;
+  introductorio_imagen_url: string | null;
+  principal_imagen_url: string | null;
   jugadores_estado: Record<string, EstadoJugador> | null;
   equipos: Equipo[] | null;
 } | null;
@@ -86,6 +92,39 @@ export function SesionPlanificador({
     objetivos_fisicos: sesion?.objetivos_fisicos ?? "",
   });
   const [planStatus, setPlanStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const [imagenes, setImagenes] = useState<Record<CampoImagen, string | null>>({
+    activacion: sesion?.activacion_imagen_url ?? null,
+    introductorio: sesion?.introductorio_imagen_url ?? null,
+    principal: sesion?.principal_imagen_url ?? null,
+  });
+  const [imagenPendiente, setImagenPendiente] = useState<CampoImagen | null>(null);
+  const [imagenError, setImagenError] = useState<Record<CampoImagen, string | null>>({
+    activacion: null,
+    introductorio: null,
+    principal: null,
+  });
+
+  async function handleSubirImagen(campo: CampoImagen, file: File) {
+    setImagenPendiente(campo);
+    setImagenError((prev) => ({ ...prev, [campo]: null }));
+    const formData = new FormData();
+    formData.set("file", file);
+    const result = await subirImagenPlan(fecha, campo, formData);
+    if (result.url) {
+      setImagenes((prev) => ({ ...prev, [campo]: result.url }));
+    } else {
+      setImagenError((prev) => ({ ...prev, [campo]: result.error ?? "No se pudo subir la imagen." }));
+    }
+    setImagenPendiente(null);
+  }
+
+  async function handleQuitarImagen(campo: CampoImagen) {
+    const url = imagenes[campo];
+    if (!url) return;
+    setImagenes((prev) => ({ ...prev, [campo]: null }));
+    await eliminarImagenPlan(fecha, campo, url);
+  }
 
   const [jugadoresEstado, setJugadoresEstado] = useState<Record<string, EstadoJugador>>(
     sesion?.jugadores_estado ?? {},
@@ -216,6 +255,9 @@ export function SesionPlanificador({
             principal: plan.principal,
             objetivos_tarea: plan.objetivos_tarea,
             objetivos_fisicos: plan.objetivos_fisicos,
+            activacionImagenUrl: imagenes.activacion,
+            introductorioImagenUrl: imagenes.introductorio,
+            principalImagenUrl: imagenes.principal,
             habilitados: habilitados.map(nombreCompleto),
             recuperacion: recuperacion.map(nombreCompleto),
             reduccion: reduccion.map(nombreCompleto),
@@ -260,13 +302,39 @@ export function SesionPlanificador({
             onChange={(e) => setPlan({ ...plan, lugar: e.target.value })}
             className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
-          <Campo label="Activación" value={plan.activacion} onChange={(v) => setPlan({ ...plan, activacion: v })} />
+          <Campo
+            label="Activación"
+            value={plan.activacion}
+            onChange={(v) => setPlan({ ...plan, activacion: v })}
+            campo="activacion"
+            imagenUrl={imagenes.activacion}
+            subiendoImagen={imagenPendiente === "activacion"}
+            imagenError={imagenError.activacion}
+            onSubirImagen={handleSubirImagen}
+            onQuitarImagen={handleQuitarImagen}
+          />
           <Campo
             label="Introductorio"
             value={plan.introductorio}
             onChange={(v) => setPlan({ ...plan, introductorio: v })}
+            campo="introductorio"
+            imagenUrl={imagenes.introductorio}
+            subiendoImagen={imagenPendiente === "introductorio"}
+            imagenError={imagenError.introductorio}
+            onSubirImagen={handleSubirImagen}
+            onQuitarImagen={handleQuitarImagen}
           />
-          <Campo label="Principal" value={plan.principal} onChange={(v) => setPlan({ ...plan, principal: v })} />
+          <Campo
+            label="Principal"
+            value={plan.principal}
+            onChange={(v) => setPlan({ ...plan, principal: v })}
+            campo="principal"
+            imagenUrl={imagenes.principal}
+            subiendoImagen={imagenPendiente === "principal"}
+            imagenError={imagenError.principal}
+            onSubirImagen={handleSubirImagen}
+            onQuitarImagen={handleQuitarImagen}
+          />
           <Campo
             label="Objetivos de la tarea"
             value={plan.objetivos_tarea}
@@ -446,7 +514,29 @@ function SyncBadge({ status }: { status: "idle" | "saving" | "saved" | "error" }
   return <span className="text-[10px] font-normal normal-case text-emerald-600">Guardado ✓</span>;
 }
 
-function Campo({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Campo({
+  label,
+  value,
+  onChange,
+  campo,
+  imagenUrl,
+  subiendoImagen,
+  imagenError,
+  onSubirImagen,
+  onQuitarImagen,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  campo?: CampoImagen;
+  imagenUrl?: string | null;
+  subiendoImagen?: boolean;
+  imagenError?: string | null;
+  onSubirImagen?: (campo: CampoImagen, file: File) => void;
+  onQuitarImagen?: (campo: CampoImagen) => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <label className="flex flex-col gap-1">
       <span className="text-xs font-medium text-foreground/50">{label}</span>
@@ -456,6 +546,47 @@ function Campo({ label, value, onChange }: { label: string; value: string; onCha
         rows={2}
         className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
       />
+
+      {campo && (
+        <div className="mt-1">
+          {imagenUrl ? (
+            <div className="flex items-start gap-3 rounded-md border border-border bg-background/40 p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imagenUrl} alt="" className="h-20 w-auto rounded object-contain" />
+              <button
+                type="button"
+                onClick={() => onQuitarImagen?.(campo)}
+                className="text-xs text-foreground/40 hover:text-accent"
+              >
+                Quitar imagen
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onSubirImagen?.(campo, file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={subiendoImagen}
+                className="rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground/60 transition-colors hover:bg-primary/5 disabled:opacity-50"
+              >
+                {subiendoImagen ? "Subiendo..." : "+ Agregar imagen"}
+              </button>
+              {imagenError && <p className="mt-1 text-xs text-accent">{imagenError}</p>}
+            </>
+          )}
+        </div>
+      )}
     </label>
   );
 }

@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
   quadrantHeaderTitle: { fontSize: 10, fontWeight: 700, color: "#ffffff" },
   quadrantBody: { padding: 10, minHeight: 40 },
   quadrantText: { fontSize: 9.5, lineHeight: 1.5, color: COLORS.ink },
+  quadrantImage: { maxWidth: "100%", maxHeight: 200, marginTop: 8, objectFit: "contain" },
   emptyText: { fontSize: 9, color: "#999", fontStyle: "italic" },
 
   section: { marginBottom: 14 },
@@ -90,6 +91,9 @@ export type SesionPdfData = {
   principal: string;
   objetivos_tarea: string;
   objetivos_fisicos: string;
+  activacionImagenUrl: string | null;
+  introductorioImagenUrl: string | null;
+  principalImagenUrl: string | null;
   habilitados: string[];
   recuperacion: string[];
   reduccion: string[];
@@ -97,7 +101,17 @@ export type SesionPdfData = {
   crestUrl: string;
 };
 
-function Quadrant({ title, body, full }: { title: string; body: string; full?: boolean }) {
+function Quadrant({
+  title,
+  body,
+  imageUrl,
+  full,
+}: {
+  title: string;
+  body: string;
+  imageUrl?: string | null;
+  full?: boolean;
+}) {
   return (
     <View style={[styles.quadrant, full ? styles.quadrantFull : {}]} wrap={false}>
       <View style={styles.quadrantHeader}>
@@ -105,6 +119,10 @@ function Quadrant({ title, body, full }: { title: string; body: string; full?: b
       </View>
       <View style={styles.quadrantBody}>
         {body ? <Text style={styles.quadrantText}>{body}</Text> : <Text style={styles.emptyText}>Sin definir</Text>}
+        {imageUrl && (
+          // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
+          <Image src={imageUrl} style={styles.quadrantImage} />
+        )}
       </View>
     </View>
   );
@@ -135,9 +153,9 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
         </View>
 
         <View style={styles.quadrantGrid}>
-          <Quadrant title="Activación" body={data.activacion} />
-          <Quadrant title="Introductorio" body={data.introductorio} />
-          <Quadrant title="Principal" body={data.principal} />
+          <Quadrant title="Activación" body={data.activacion} imageUrl={data.activacionImagenUrl} />
+          <Quadrant title="Introductorio" body={data.introductorio} imageUrl={data.introductorioImagenUrl} />
+          <Quadrant title="Principal" body={data.principal} imageUrl={data.principalImagenUrl} />
           <Quadrant title="Objetivos de la tarea" body={data.objetivos_tarea} />
           <Quadrant title="Objetivos físicos" body={data.objetivos_fisicos} full />
         </View>
