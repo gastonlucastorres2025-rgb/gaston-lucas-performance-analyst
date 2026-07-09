@@ -1,61 +1,85 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { COLORS, registerPdfFonts } from "@/lib/pdf-theme";
 
-const NAC_BLUE = "#0b3d91";
-const NAC_BLUE_DARK = "#072a66";
-const NAC_RED = "#d7263d";
+registerPdfFonts();
 
 const styles = StyleSheet.create({
-  page: { padding: 32, fontSize: 10, fontFamily: "Helvetica", color: "#1a1a1a" },
+  page: { padding: 32, fontSize: 10, fontFamily: "Inter", color: COLORS.ink },
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderBottom: `2 solid ${NAC_BLUE}`,
-    paddingBottom: 12,
-    marginBottom: 16,
+    borderBottom: `2 solid ${COLORS.blue}`,
+    paddingBottom: 14,
+    marginBottom: 18,
   },
-  crest: { width: 40, height: 40 },
+  crest: { width: 42, height: 42 },
   headerText: { flexDirection: "column" },
-  clubName: { fontSize: 16, fontWeight: 700, color: NAC_BLUE_DARK },
-  subtitle: { fontSize: 10, color: "#555", marginTop: 2 },
-  metaRow: { flexDirection: "row", gap: 24, marginBottom: 18 },
-  metaItem: { flexDirection: "column" },
-  metaLabel: { fontSize: 8, color: "#888", textTransform: "uppercase", letterSpacing: 0.5 },
-  metaValue: { fontSize: 11, fontWeight: 700, marginTop: 2, color: "#111" },
-  section: { marginBottom: 14 },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: 700,
-    color: "#fff",
-    backgroundColor: NAC_BLUE,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginBottom: 6,
-  },
-  sectionBody: { fontSize: 10, lineHeight: 1.5, paddingHorizontal: 2, color: "#222" },
-  emptyText: { fontSize: 9, color: "#999", fontStyle: "italic" },
-  countsRow: { flexDirection: "row", gap: 10, marginBottom: 4 },
-  countBox: {
-    flex: 1,
-    borderRadius: 4,
-    padding: 8,
+  clubName: { fontSize: 17, fontWeight: 700, color: COLORS.blueDark },
+  subtitle: { fontSize: 10, fontWeight: 500, color: COLORS.muted, marginTop: 2 },
+
+  metaRow: { flexDirection: "row", gap: 10, marginBottom: 18 },
+  metaChip: {
     flexDirection: "column",
+    backgroundColor: COLORS.blueTint,
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    minWidth: 100,
   },
+  metaLabel: { fontSize: 7.5, fontWeight: 600, color: COLORS.blueDark, textTransform: "uppercase", letterSpacing: 0.6 },
+  metaValue: { fontSize: 11, fontWeight: 700, color: COLORS.blueDark },
+
+  quadrantGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 14 },
+  quadrant: {
+    width: "48.5%",
+    borderRadius: 6,
+    border: `1 solid ${COLORS.border}`,
+    overflow: "hidden",
+  },
+  quadrantFull: { width: "100%" },
+  quadrantHeader: { backgroundColor: COLORS.blue, paddingVertical: 6, paddingHorizontal: 10 },
+  quadrantHeaderTitle: { fontSize: 10, fontWeight: 700, color: "#ffffff" },
+  quadrantBody: { padding: 10, minHeight: 40 },
+  quadrantText: { fontSize: 9.5, lineHeight: 1.5, color: COLORS.ink },
+  emptyText: { fontSize: 9, color: "#999", fontStyle: "italic" },
+
+  section: { marginBottom: 14 },
+  sectionCard: { borderRadius: 6, border: `1 solid ${COLORS.border}`, overflow: "hidden" },
+  sectionHeader: { paddingVertical: 7, paddingHorizontal: 10 },
+  sectionHeaderTitle: { fontSize: 10, fontWeight: 700, color: "#ffffff" },
+  sectionBody: { padding: 10 },
+
+  countsRow: { flexDirection: "row", gap: 10, marginBottom: 8 },
+  countBox: { flex: 1, borderRadius: 6, padding: 8, flexDirection: "column" },
   countNumber: { fontSize: 18, fontWeight: 700 },
-  countLabel: { fontSize: 8, marginTop: 2, textTransform: "uppercase" },
-  playerList: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
+  countLabel: { fontSize: 8, fontWeight: 600, marginTop: 2, textTransform: "uppercase" },
+  playerList: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   playerChip: {
     fontSize: 8.5,
+    fontWeight: 500,
     paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 3,
+    paddingHorizontal: 7,
+    borderRadius: 10,
     backgroundColor: "#f1f3f6",
     color: "#333",
   },
   equiposRow: { flexDirection: "row", gap: 12 },
-  equipoCol: { flex: 1, border: "1 solid #e2e5ea", borderRadius: 4, padding: 8 },
-  equipoNombre: { fontSize: 10, fontWeight: 700, marginBottom: 6, color: NAC_BLUE_DARK },
-  footer: { position: "absolute", bottom: 24, left: 32, right: 32, fontSize: 8, color: "#999", textAlign: "center" },
+  equipoCol: { flex: 1, border: `1 solid ${COLORS.border}`, borderRadius: 6, padding: 8 },
+  equipoNombre: { fontSize: 10, fontWeight: 700, marginBottom: 6, color: COLORS.blueDark },
+  equipoPlayer: { fontSize: 9, marginBottom: 3, color: COLORS.ink },
+
+  footer: {
+    position: "absolute",
+    bottom: 24,
+    left: 32,
+    right: 32,
+    fontSize: 8,
+    color: "#999",
+    textAlign: "center",
+    borderTop: `1 solid ${COLORS.border}`,
+    paddingTop: 8,
+  },
 });
 
 export type SesionPdfData = {
@@ -73,11 +97,15 @@ export type SesionPdfData = {
   crestUrl: string;
 };
 
-function Section({ title, body }: { title: string; body: string }) {
+function Quadrant({ title, body, full }: { title: string; body: string; full?: boolean }) {
   return (
-    <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {body ? <Text style={styles.sectionBody}>{body}</Text> : <Text style={styles.emptyText}>Sin definir</Text>}
+    <View style={[styles.quadrant, full ? styles.quadrantFull : {}]} wrap={false}>
+      <View style={styles.quadrantHeader}>
+        <Text style={styles.quadrantHeaderTitle}>{title}</Text>
+      </View>
+      <View style={styles.quadrantBody}>
+        {body ? <Text style={styles.quadrantText}>{body}</Text> : <Text style={styles.emptyText}>Sin definir</Text>}
+      </View>
     </View>
   );
 }
@@ -96,65 +124,79 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
         </View>
 
         <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
+          <View style={styles.metaChip}>
             <Text style={styles.metaLabel}>Fecha</Text>
             <Text style={styles.metaValue}>{data.fecha}</Text>
           </View>
-          <View style={styles.metaItem}>
+          <View style={styles.metaChip}>
             <Text style={styles.metaLabel}>Lugar</Text>
             <Text style={styles.metaValue}>{data.lugar || "—"}</Text>
           </View>
         </View>
 
-        <Section title="Activación" body={data.activacion} />
-        <Section title="Introductorio" body={data.introductorio} />
-        <Section title="Principal" body={data.principal} />
-        <Section title="Objetivos de la tarea" body={data.objetivos_tarea} />
-        <Section title="Objetivos físicos" body={data.objetivos_fisicos} />
+        <View style={styles.quadrantGrid}>
+          <Quadrant title="Activación" body={data.activacion} />
+          <Quadrant title="Introductorio" body={data.introductorio} />
+          <Quadrant title="Principal" body={data.principal} />
+          <Quadrant title="Objetivos de la tarea" body={data.objetivos_tarea} />
+          <Quadrant title="Objetivos físicos" body={data.objetivos_fisicos} full />
+        </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Disponibilidad del plantel</Text>
-          <View style={styles.countsRow}>
-            <View style={[styles.countBox, { backgroundColor: "#e6f1fb" }]}>
-              <Text style={[styles.countNumber, { color: NAC_BLUE_DARK }]}>{data.habilitados.length}</Text>
-              <Text style={[styles.countLabel, { color: NAC_BLUE_DARK }]}>Habilitados</Text>
+          <View style={styles.sectionCard} wrap={false}>
+            <View style={[styles.sectionHeader, { backgroundColor: COLORS.blue }]}>
+              <Text style={styles.sectionHeaderTitle}>Disponibilidad del plantel</Text>
             </View>
-            <View style={[styles.countBox, { backgroundColor: "#faeeda" }]}>
-              <Text style={[styles.countNumber, { color: "#854f0b" }]}>{data.recuperacion.length}</Text>
-              <Text style={[styles.countLabel, { color: "#854f0b" }]}>En recuperación</Text>
+            <View style={styles.sectionBody}>
+              <View style={styles.countsRow}>
+                <View style={[styles.countBox, { backgroundColor: COLORS.blueTint }]}>
+                  <Text style={[styles.countNumber, { color: COLORS.blueDark }]}>{data.habilitados.length}</Text>
+                  <Text style={[styles.countLabel, { color: COLORS.blueDark }]}>Habilitados</Text>
+                </View>
+                <View style={[styles.countBox, { backgroundColor: COLORS.amberTint }]}>
+                  <Text style={[styles.countNumber, { color: COLORS.amber }]}>{data.recuperacion.length}</Text>
+                  <Text style={[styles.countLabel, { color: COLORS.amber }]}>En recuperación</Text>
+                </View>
+                <View style={[styles.countBox, { backgroundColor: COLORS.redTint }]}>
+                  <Text style={[styles.countNumber, { color: COLORS.red }]}>{data.reduccion.length}</Text>
+                  <Text style={[styles.countLabel, { color: COLORS.red }]}>Reducción de tareas</Text>
+                </View>
+              </View>
+              <View style={styles.playerList}>
+                {data.habilitados.map((n) => (
+                  <Text key={n} style={styles.playerChip}>
+                    {n}
+                  </Text>
+                ))}
+              </View>
             </View>
-            <View style={[styles.countBox, { backgroundColor: "#fcebeb" }]}>
-              <Text style={[styles.countNumber, { color: NAC_RED }]}>{data.reduccion.length}</Text>
-              <Text style={[styles.countLabel, { color: NAC_RED }]}>Reducción de tareas</Text>
-            </View>
-          </View>
-          <View style={styles.playerList}>
-            {data.habilitados.map((n) => (
-              <Text key={n} style={styles.playerChip}>
-                {n}
-              </Text>
-            ))}
           </View>
         </View>
 
         {data.equipos.some((eq) => eq.jugadores.length > 0) && (
           <View style={styles.section} wrap={false}>
-            <Text style={styles.sectionTitle}>Equipos</Text>
-            <View style={styles.equiposRow}>
-              {data.equipos.map((eq) => (
-                <View key={eq.nombre} style={styles.equipoCol}>
-                  <Text style={styles.equipoNombre}>{eq.nombre}</Text>
-                  {eq.jugadores.length === 0 ? (
-                    <Text style={styles.emptyText}>Sin jugadores</Text>
-                  ) : (
-                    eq.jugadores.map((n) => (
-                      <Text key={n} style={{ fontSize: 9, marginBottom: 3 }}>
-                        {n}
-                      </Text>
-                    ))
-                  )}
+            <View style={styles.sectionCard}>
+              <View style={[styles.sectionHeader, { backgroundColor: COLORS.green }]}>
+                <Text style={styles.sectionHeaderTitle}>Equipos</Text>
+              </View>
+              <View style={[styles.sectionBody, { backgroundColor: COLORS.greenTint }]}>
+                <View style={styles.equiposRow}>
+                  {data.equipos.map((eq) => (
+                    <View key={eq.nombre} style={styles.equipoCol}>
+                      <Text style={styles.equipoNombre}>{eq.nombre}</Text>
+                      {eq.jugadores.length === 0 ? (
+                        <Text style={styles.emptyText}>Sin jugadores</Text>
+                      ) : (
+                        eq.jugadores.map((n) => (
+                          <Text key={n} style={styles.equipoPlayer}>
+                            {n}
+                          </Text>
+                        ))
+                      )}
+                    </View>
+                  ))}
                 </View>
-              ))}
+              </View>
             </View>
           </View>
         )}
