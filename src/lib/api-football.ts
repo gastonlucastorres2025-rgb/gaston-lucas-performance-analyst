@@ -6,7 +6,6 @@ export const LEAGUE_APERTURA = 268;
 export const LEAGUE_CLAUSURA = 270;
 export const LEAGUE_SUDAMERICANA = 11;
 export const TEAM_NACIONAL = 2356;
-export const TEAM_TIGRE = 452;
 
 async function afFetch<T>(path: string, params: Record<string, string | number>): Promise<T> {
   const search = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
@@ -86,8 +85,8 @@ export async function fetchGroupStandings(leagueId: number, season = SEASON_ACTU
 
 export type Cruce = {
   ronda: string;
-  local: { nombre: string; escudo: string };
-  visitante: { nombre: string; escudo: string };
+  local: { teamId: number; nombre: string; escudo: string };
+  visitante: { teamId: number; nombre: string; escudo: string };
   ida: { fecha: string; golesLocal: number | null; golesVisitante: number | null } | null;
   vuelta: { fecha: string; golesLocal: number | null; golesVisitante: number | null } | null;
 };
@@ -126,8 +125,8 @@ export async function fetchCrucesRonda(
 
     cruces.push({
       ronda: f.league.round,
-      local: { nombre: primero.teams.home.name, escudo: primero.teams.home.logo },
-      visitante: { nombre: primero.teams.away.name, escudo: primero.teams.away.logo },
+      local: { teamId: primero.teams.home.id, nombre: primero.teams.home.name, escudo: primero.teams.home.logo },
+      visitante: { teamId: primero.teams.away.id, nombre: primero.teams.away.name, escudo: primero.teams.away.logo },
       ida: {
         fecha: primero.fixture.date,
         golesLocal: primero.goals.home,
@@ -140,6 +139,34 @@ export async function fetchCrucesRonda(
   }
 
   return cruces.sort((a, b) => new Date(a.ida!.fecha).getTime() - new Date(b.ida!.fecha).getTime());
+}
+
+export type ProximoRival = {
+  teamId: number;
+  nombre: string;
+  escudo: string;
+  ronda: string;
+  fecha: string;
+};
+
+export async function fetchProximoRivalEnLiga(
+  teamId: number,
+  leagueId: number,
+  season = SEASON_ACTUAL,
+): Promise<ProximoRival | null> {
+  const fixtures = await afFetch<FixturesApiResponse>("fixtures", {
+    team: teamId,
+    league: leagueId,
+    season,
+    next: 1,
+  });
+  if (!fixtures.length) return null;
+
+  const f = fixtures[0];
+  const esLocal = f.teams.home.id === teamId;
+  const rival = esLocal ? f.teams.away : f.teams.home;
+
+  return { teamId: rival.id, nombre: rival.name, escudo: rival.logo, ronda: f.league.round, fecha: f.fixture.date };
 }
 
 export type JugadorStat = {
