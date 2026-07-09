@@ -1,5 +1,5 @@
 import {
-  fetchGroupStandings,
+  fetchCrucesRonda,
   fetchStandings,
   fetchTopJugadores,
   LEAGUE_APERTURA,
@@ -9,7 +9,7 @@ import {
 } from "@/lib/api-football";
 import { PageHeader } from "@/components/page-header";
 import { RivalJugadores } from "@/components/rival-jugadores";
-import { SudamericanaGrupos } from "@/components/sudamericana-grupos";
+import { SudamericanaCruces } from "@/components/sudamericana-cruces";
 import { TareasResumen } from "@/components/tareas-resumen";
 import { UruguayStandings } from "@/components/uruguay-standings";
 import { fetchIntermedioGrupos } from "@/lib/espn-uruguay";
@@ -21,11 +21,11 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [aperturaRes, clausuraRes, intermedioRes, sudamericanaRes, tigreRes, tareasRes] = await Promise.allSettled([
+  const [aperturaRes, clausuraRes, intermedioRes, crucesRes, tigreRes, tareasRes] = await Promise.allSettled([
     fetchStandings(LEAGUE_APERTURA),
     fetchStandings(LEAGUE_CLAUSURA),
     fetchIntermedioGrupos(),
-    fetchGroupStandings(LEAGUE_SUDAMERICANA),
+    fetchCrucesRonda(LEAGUE_SUDAMERICANA, "Round of 32"),
     fetchTopJugadores(TEAM_TIGRE),
     supabase
       .from("tareas")
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
   const apertura = aperturaRes.status === "fulfilled" ? aperturaRes.value : [];
   const clausura = clausuraRes.status === "fulfilled" ? clausuraRes.value : [];
   const intermedio = intermedioRes.status === "fulfilled" ? intermedioRes.value : [];
-  const sudamericana = sudamericanaRes.status === "fulfilled" ? sudamericanaRes.value : [];
+  const cruces = crucesRes.status === "fulfilled" ? crucesRes.value : [];
   const tigre =
     tigreRes.status === "fulfilled" ? tigreRes.value : { goleadores: [], asistidores: [] };
   const tareas = tareasRes.status === "fulfilled" ? (tareasRes.value.data ?? []) : [];
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
   const serieB = intermedio.find((g) => g.nombre === "Serie B")?.equipos ?? [];
   const anual = computeTablaAnual(apertura, [...serieA, ...serieB], clausura);
 
-  const errores = [aperturaRes, clausuraRes, intermedioRes, sudamericanaRes, tigreRes].some(
+  const errores = [aperturaRes, clausuraRes, intermedioRes, crucesRes, tigreRes].some(
     (r) => r.status === "rejected",
   );
 
@@ -79,9 +79,9 @@ export default async function DashboardPage() {
 
       <div className="mb-6 rounded-xl border border-border bg-surface p-5 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-foreground/50">
-          Copa Sudamericana · Fase de grupos
+          Copa Sudamericana · Octavos de final
         </h2>
-        <SudamericanaGrupos grupos={sudamericana.map((g) => ({ grupo: g.grupo, filas: g.equipos }))} />
+        <SudamericanaCruces cruces={cruces} />
       </div>
 
       <div className="mb-6 rounded-xl border border-border bg-surface p-5 shadow-sm">

@@ -84,6 +84,64 @@ export async function fetchGroupStandings(leagueId: number, season = SEASON_ACTU
   }));
 }
 
+export type Cruce = {
+  ronda: string;
+  local: { nombre: string; escudo: string };
+  visitante: { nombre: string; escudo: string };
+  ida: { fecha: string; golesLocal: number | null; golesVisitante: number | null } | null;
+  vuelta: { fecha: string; golesLocal: number | null; golesVisitante: number | null } | null;
+};
+
+type FixturesApiResponse = {
+  fixture: { id: number; date: string; status: { short: string } };
+  league: { round: string };
+  teams: { home: { id: number; name: string; logo: string }; away: { id: number; name: string; logo: string } };
+  goals: { home: number | null; away: number | null };
+}[];
+
+export async function fetchCrucesRonda(
+  leagueId: number,
+  ronda: string,
+  season = SEASON_ACTUAL,
+): Promise<Cruce[]> {
+  const fixtures = await afFetch<FixturesApiResponse>("fixtures", { league: leagueId, season, round: ronda });
+
+  const vistos = new Set<number>();
+  const cruces: Cruce[] = [];
+
+  for (const f of fixtures) {
+    if (vistos.has(f.fixture.id)) continue;
+    const vuelta = fixtures.find(
+      (o) =>
+        o.fixture.id !== f.fixture.id &&
+        o.teams.home.id === f.teams.away.id &&
+        o.teams.away.id === f.teams.home.id,
+    );
+
+    vistos.add(f.fixture.id);
+    if (vuelta) vistos.add(vuelta.fixture.id);
+
+    const primero = vuelta && new Date(vuelta.fixture.date) < new Date(f.fixture.date) ? vuelta : f;
+    const segundo = primero === f ? vuelta : f;
+
+    cruces.push({
+      ronda: f.league.round,
+      local: { nombre: primero.teams.home.name, escudo: primero.teams.home.logo },
+      visitante: { nombre: primero.teams.away.name, escudo: primero.teams.away.logo },
+      ida: {
+        fecha: primero.fixture.date,
+        golesLocal: primero.goals.home,
+        golesVisitante: primero.goals.away,
+      },
+      vuelta: segundo
+        ? { fecha: segundo.fixture.date, golesLocal: segundo.goals.home, golesVisitante: segundo.goals.away }
+        : null,
+    });
+  }
+
+  return cruces.sort((a, b) => new Date(a.ida!.fecha).getTime() - new Date(b.ida!.fecha).getTime());
+}
+
 export type JugadorStat = {
   nombre: string;
   foto: string;
