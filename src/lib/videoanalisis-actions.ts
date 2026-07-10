@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { parsearXmlNacsport } from "@/lib/videoanalisis/xml-parser";
+import { decodificarXml, parsearXmlNacsport } from "@/lib/videoanalisis/xml-parser";
 import { extraerYoutubeId } from "@/lib/videoanalisis/youtube";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -45,7 +45,7 @@ export async function crearPartidoVA(
 
   let xmlTexto: string;
   try {
-    xmlTexto = await xmlFile.text();
+    xmlTexto = decodificarXml(await xmlFile.arrayBuffer());
   } catch {
     return { error: "No se pudo leer el archivo XML." };
   }

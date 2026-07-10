@@ -12,6 +12,19 @@ type RawRow = { code: string | number; R: string | number; G: string | number; B
 export type CategoriaParseada = { codigo: string; colorHex: string };
 export type AccionParseada = { codigo: string; inicio: number; fin: number };
 
+// Algunas herramientas (ej. Angles, en Windows) exportan el XML en UTF-16 en vez
+// de UTF-8. Si se lee como UTF-8 sin más, el archivo queda corrupto (bytes nulos
+// intercalados) y ni siquiera se reconoce el tag raíz <file>. Detectamos el BOM
+// o, si no hay BOM, el patrón de bytes nulos intercalados típico de UTF-16.
+export function decodificarXml(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder("utf-16le").decode(buffer);
+  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder("utf-16be").decode(buffer);
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) return new TextDecoder("utf-8").decode(buffer);
+  if (bytes.length > 4 && bytes[1] === 0x00 && bytes[3] === 0x00) return new TextDecoder("utf-16le").decode(buffer);
+  return new TextDecoder("utf-8").decode(buffer);
+}
+
 function canal8bit(valor16bit: number): number {
   return Math.round((valor16bit / 65535) * 255);
 }
