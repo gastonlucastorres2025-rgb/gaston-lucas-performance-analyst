@@ -8,6 +8,7 @@ import {
   LEAGUE_SUDAMERICANA,
   TEAM_NACIONAL,
 } from "@/lib/api-football";
+import { fetchGoleadoresClubAUF } from "@/lib/auf-scraper";
 import { PageHeader } from "@/components/page-header";
 import { TareasResumen } from "@/components/tareas-resumen";
 import { UruguayStandings } from "@/components/uruguay-standings";
@@ -19,12 +20,27 @@ export const dynamic = "force-dynamic";
 
 async function fetchRival(teamId: number | undefined, nombre: string | undefined) {
   if (!teamId || !nombre) return null;
+
+  let goleadores: Awaited<ReturnType<typeof fetchTopJugadores>>["goleadores"] = [];
+  let asistidores: Awaited<ReturnType<typeof fetchTopJugadores>>["asistidores"] = [];
   try {
-    const { goleadores, asistidores } = await fetchTopJugadores(teamId);
-    return { nombre, goleadores, asistidores };
+    ({ goleadores, asistidores } = await fetchTopJugadores(teamId));
   } catch {
-    return { nombre, goleadores: [], asistidores: [] };
+    // Seguimos abajo: intentamos completar los goleadores con la AUF.
   }
+
+  // API-Football no tiene datos de goles para varios clubes uruguayos; la AUF
+  // solo publica goles (no asistencias), así que la usamos como respaldo únicamente ahí.
+  if (goleadores.length === 0) {
+    try {
+      const aufGoleadores = await fetchGoleadoresClubAUF(nombre);
+      goleadores = aufGoleadores.map((g) => ({ nombre: g.nombre, foto: g.escudo, goles: g.goles, asistencias: 0 }));
+    } catch {
+      // Si también falla la AUF, queda vacío y se muestra "Sin datos.".
+    }
+  }
+
+  return { nombre, goleadores, asistidores };
 }
 
 export default async function DashboardPage() {
