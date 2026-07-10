@@ -19,8 +19,12 @@ export const dynamic = "force-dynamic";
 
 async function fetchRival(teamId: number | undefined, nombre: string | undefined) {
   if (!teamId || !nombre) return null;
-  const { goleadores, asistidores } = await fetchTopJugadores(teamId);
-  return { nombre, goleadores, asistidores };
+  try {
+    const { goleadores, asistidores } = await fetchTopJugadores(teamId);
+    return { nombre, goleadores, asistidores };
+  } catch {
+    return { nombre, goleadores: [], asistidores: [] };
+  }
 }
 
 export default async function DashboardPage() {
