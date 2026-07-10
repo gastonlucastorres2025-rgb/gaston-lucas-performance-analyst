@@ -1,6 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
 
-const parser = new XMLParser({ ignoreAttributes: true, isArray: (name) => ["instance", "row"].includes(name) });
+const parser = new XMLParser({
+  ignoreAttributes: true,
+  isArray: (name) => ["instance", "row"].includes(name),
+  maxNestedTags: 100000,
+});
 
 type RawInstance = { code: string | number; start: string | number; end: string | number };
 type RawRow = { code: string | number; R: string | number; G: string | number; B: string | number };
