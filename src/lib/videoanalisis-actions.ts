@@ -19,6 +19,31 @@ async function getTeamId() {
   return staff?.team_id ?? null;
 }
 
+async function guardarLogoCompetencia(teamId: string, nombre: string, file: File): Promise<string | null> {
+  if (!file.type.startsWith("image/")) return null;
+
+  const admin = createAdminClient();
+  const ext = file.name.split(".").pop() || "png";
+  const path = `${teamId}/${nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.${ext}`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+
+  const { error: uploadError } = await admin.storage.from("videoanalisis-logos").upload(path, bytes, {
+    contentType: file.type,
+  });
+  if (uploadError) return null;
+
+  const {
+    data: { publicUrl },
+  } = admin.storage.from("videoanalisis-logos").getPublicUrl(path);
+
+  await admin.from("va_competencia_logos").upsert(
+    { team_id: teamId, nombre, logo_url: publicUrl },
+    { onConflict: "team_id,nombre" },
+  );
+
+  return publicUrl;
+}
+
 export async function crearPartidoVA(
   _prevState: CrearPartidoVAState,
   formData: FormData,
@@ -27,8 +52,11 @@ export async function crearPartidoVA(
   if (!teamId) return { error: "No autenticado." };
 
   const fecha = formData.get("fecha") as string;
-  const rival = (formData.get("rival") as string)?.trim();
+  const rivalSeleccionado = (formData.get("rival") as string)?.trim();
+  const rivalOtro = (formData.get("rival_otro") as string)?.trim();
+  const rival = rivalSeleccionado === "__otro__" ? rivalOtro : rivalSeleccionado;
   const competencia = (formData.get("competencia") as string)?.trim() || null;
+  const competenciaLogoFile = formData.get("competencia_logo") as File | null;
   const categoria = (formData.get("categoria") as string)?.trim() || null;
   const condicion = (formData.get("condicion") as string) || null;
   const golesFavorRaw = formData.get("goles_favor") as string;
@@ -37,6 +65,10 @@ export async function crearPartidoVA(
   const xmlFile = formData.get("xml") as File | null;
 
   if (!fecha || !rival) return { error: "Completá al menos la fecha y el rival." };
+
+  if (competencia && competenciaLogoFile && competenciaLogoFile.size > 0) {
+    await guardarLogoCompetencia(teamId, competencia, competenciaLogoFile);
+  }
 
   const youtubeId = youtubeInput ? extraerYoutubeId(youtubeInput) : null;
   if (!youtubeId) return { error: "El link de YouTube no parece válido." };

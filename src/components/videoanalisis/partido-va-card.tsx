@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { parseDateKey } from "@/lib/calendar-utils";
+import { equiposPlaca } from "@/lib/videoanalisis/placa-helpers";
+import { PlacaPartido } from "@/components/videoanalisis/placa-partido";
 
 type Partido = {
   id: string;
@@ -13,13 +15,19 @@ type Partido = {
   youtube_video_id: string;
 };
 
-export function PartidoVACard({ partido }: { partido: Partido }) {
+export function PartidoVACard({
+  partido,
+  logoCompetencia,
+}: {
+  partido: Partido;
+  logoCompetencia: string | null;
+}) {
   const fechaTexto = parseDateKey(partido.fecha).toLocaleDateString("es-UY", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-  const tieneResultado = partido.goles_favor != null && partido.goles_contra != null;
+  const { local, visitante } = equiposPlaca(partido);
 
   return (
     <Link
@@ -38,25 +46,22 @@ export function PartidoVACard({ partido }: { partido: Partido }) {
             ▶
           </span>
         </div>
-        {tieneResultado && (
-          <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-0.5 font-mono text-xs font-semibold text-white">
-            {partido.goles_favor} - {partido.goles_contra}
-          </span>
-        )}
       </div>
       <div className="p-3">
-        <p className="truncate font-medium">
-          {partido.condicion === "visitante" ? `${partido.rival} vs Nacional` : `Nacional vs ${partido.rival}`}
-        </p>
-        <p className="mt-0.5 truncate text-xs text-foreground/50">
-          {fechaTexto}
-          {partido.competencia ? ` · ${partido.competencia}` : ""}
-        </p>
-        {partido.categoria && (
-          <span className="mt-2 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-            {partido.categoria}
-          </span>
-        )}
+        <PlacaPartido
+          local={local}
+          visitante={visitante}
+          competencia={partido.competencia ? { nombre: partido.competencia, logoUrl: logoCompetencia } : null}
+          size="sm"
+        />
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <p className="truncate text-xs text-foreground/50">{fechaTexto}</p>
+          {partido.categoria && (
+            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+              {partido.categoria}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );

@@ -3,7 +3,7 @@ import type { EspnStandingRow } from "@/lib/espn-uruguay";
 
 // Mapeo de equipos entre API-Football (Apertura/Clausura) y ESPN (Intermedio):
 // ambas fuentes nombran a los mismos 16 clubes de forma distinta.
-const EQUIPOS = [
+export const EQUIPOS = [
   { slug: "deportivo-maldonado", nombre: "Deportivo Maldonado", afId: 2370, espnId: "10000" },
   { slug: "racing", nombre: "Racing", afId: 2359, espnId: "9903" },
   { slug: "penarol", nombre: "Peñarol", afId: 2348, espnId: "2683" },

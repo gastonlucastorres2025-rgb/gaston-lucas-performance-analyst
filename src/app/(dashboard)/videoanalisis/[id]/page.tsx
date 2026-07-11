@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/page-header";
 import { VisorPartido } from "@/components/videoanalisis/visor-partido";
+import { PlacaPartido } from "@/components/videoanalisis/placa-partido";
+import { equiposPlaca } from "@/lib/videoanalisis/placa-helpers";
 import { parseDateKey } from "@/lib/calendar-utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,6 +23,16 @@ export default async function PartidoVADetallePage({ params }: { params: Promise
 
   if (!partido) notFound();
 
+  let logoCompetencia: string | null = null;
+  if (partido.competencia) {
+    const { data: logo } = await supabase
+      .from("va_competencia_logos")
+      .select("logo_url")
+      .eq("nombre", partido.competencia)
+      .maybeSingle();
+    logoCompetencia = logo?.logo_url ?? null;
+  }
+
   const fechaTexto = parseDateKey(partido.fecha).toLocaleDateString("es-UY", {
     weekday: "long",
     day: "numeric",
@@ -29,12 +40,19 @@ export default async function PartidoVADetallePage({ params }: { params: Promise
     year: "numeric",
   });
 
+  const { local, visitante } = equiposPlaca(partido);
+
   return (
     <div>
-      <PageHeader
-        title={partido.condicion === "visitante" ? `${partido.rival} vs Nacional` : `Nacional vs ${partido.rival}`}
-        description={`${fechaTexto}${partido.competencia ? ` · ${partido.competencia}` : ""}`}
-      />
+      <div className="mb-6 flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
+        <PlacaPartido
+          local={local}
+          visitante={visitante}
+          competencia={partido.competencia ? { nombre: partido.competencia, logoUrl: logoCompetencia } : null}
+          size="lg"
+        />
+        <p className="text-xs text-foreground/50">{fechaTexto}</p>
+      </div>
 
       <VisorPartido
         youtubeVideoId={partido.youtube_video_id}

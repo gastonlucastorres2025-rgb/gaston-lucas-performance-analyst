@@ -7,10 +7,15 @@ export const dynamic = "force-dynamic";
 
 export default async function VideoanalisisPage() {
   const supabase = await createClient();
-  const { data: partidos } = await supabase
-    .from("partidos_va")
-    .select("id, fecha, rival, competencia, categoria, condicion, goles_favor, goles_contra, youtube_video_id")
-    .order("fecha", { ascending: false });
+  const [{ data: partidos }, { data: logos }] = await Promise.all([
+    supabase
+      .from("partidos_va")
+      .select("id, fecha, rival, competencia, categoria, condicion, goles_favor, goles_contra, youtube_video_id")
+      .order("fecha", { ascending: false }),
+    supabase.from("va_competencia_logos").select("nombre, logo_url"),
+  ]);
+
+  const logosPorCompetencia = new Map((logos ?? []).map((l) => [l.nombre, l.logo_url]));
 
   return (
     <div>
@@ -27,7 +32,11 @@ export default async function VideoanalisisPage() {
       {partidos && partidos.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {partidos.map((p) => (
-            <PartidoVACard key={p.id} partido={p} />
+            <PartidoVACard
+              key={p.id}
+              partido={p}
+              logoCompetencia={(p.competencia && logosPorCompetencia.get(p.competencia)) || null}
+            />
           ))}
         </div>
       ) : (
