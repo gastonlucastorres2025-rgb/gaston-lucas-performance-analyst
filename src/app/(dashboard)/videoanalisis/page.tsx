@@ -21,12 +21,20 @@ export default async function VideoanalisisPage() {
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
         <PageHeader title="Videoanálisis" description="Partidos analizados, con video y etiquetado listos para filtrar." />
-        <Link
-          href="/videoanalisis/nuevo"
-          className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
-        >
-          + Nuevo partido
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/videoanalisis/buscar"
+            className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+          >
+            Buscar clips
+          </Link>
+          <Link
+            href="/videoanalisis/nuevo"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+          >
+            + Nuevo partido
+          </Link>
+        </div>
       </div>
 
       {partidos && partidos.length > 0 ? (

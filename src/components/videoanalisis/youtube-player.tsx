@@ -5,6 +5,8 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 type YTPlayerInstance = {
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   playVideo: () => void;
+  pauseVideo: () => void;
+  loadVideoById: (videoId: string, startSeconds?: number) => void;
   destroy: () => void;
 };
 
@@ -24,7 +26,11 @@ declare global {
   }
 }
 
-export type YoutubePlayerHandle = { seekTo: (seconds: number) => void };
+export type YoutubePlayerHandle = {
+  seekTo: (seconds: number) => void;
+  cargarVideo: (videoId: string, startSeconds?: number) => void;
+  pausar: () => void;
+};
 
 let apiPromise: Promise<void> | null = null;
 
@@ -72,6 +78,12 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, { videoId: string }
       seekTo: (seconds: number) => {
         playerRef.current?.seekTo(seconds, true);
         playerRef.current?.playVideo();
+      },
+      cargarVideo: (videoId: string, startSeconds?: number) => {
+        playerRef.current?.loadVideoById(videoId, startSeconds ?? 0);
+      },
+      pausar: () => {
+        playerRef.current?.pauseVideo();
       },
     }),
     [],
