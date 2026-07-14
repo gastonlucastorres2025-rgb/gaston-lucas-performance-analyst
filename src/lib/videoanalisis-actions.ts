@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { decodificarXml, parsearXmlNacsport } from "@/lib/videoanalisis/xml-parser";
 import { extraerYoutubeId } from "@/lib/videoanalisis/youtube";
+import { buscarOCrearRival } from "@/lib/rivales";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -97,12 +98,14 @@ export async function crearPartidoVA(
   if (uploadError) return { error: `No se pudo guardar el XML: ${uploadError.message}` };
 
   const supabase = await createClient();
+  const rivalId = await buscarOCrearRival(supabase, teamId, rival);
   const { data: partido, error: insertError } = await supabase
     .from("partidos_va")
     .insert({
       team_id: teamId,
       fecha,
       rival,
+      rival_id: rivalId,
       competencia,
       categoria,
       condicion,

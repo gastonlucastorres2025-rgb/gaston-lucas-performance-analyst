@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { analisisRivalVacio, type AnalisisRivalData } from "@/lib/analisis-rival-types";
+import { buscarOCrearRival } from "@/lib/rivales";
 import { createClient } from "@/lib/supabase/server";
 
 async function getTeamId() {
@@ -57,10 +58,12 @@ export async function guardarAnalisisRival(id: string, plan: AnalisisRivalData) 
   if (!teamId) return { error: "No autenticado." };
 
   const supabase = await createClient();
+  const rivalId = await buscarOCrearRival(supabase, teamId, plan.rival);
   const { error } = await supabase
     .from("analisis_rival")
     .update({
       rival: plan.rival,
+      rival_id: rivalId,
       fecha: plan.fecha,
       cancha: plan.cancha,
       tipo_partido: plan.tipo_partido,
