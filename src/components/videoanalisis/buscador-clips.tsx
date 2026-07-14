@@ -20,6 +20,8 @@ export function BuscadorClips() {
   const [error, setError] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<string[]>([]);
   const [duracionOverride, setDuracionOverride] = useState<number | null>(null);
+  const [desdeMin, setDesdeMin] = useState<number | null>(null);
+  const [hastaMin, setHastaMin] = useState<number | null>(null);
   const [clips, setClips] = useState<ClipEncontrado[]>([]);
   const [videoActualId, setVideoActualId] = useState<string | null>(null);
   const [indiceActual, setIndiceActual] = useState<number | null>(null);
@@ -40,6 +42,8 @@ export function BuscadorClips() {
       }
       setCategorias(res.categoriasCoincidentes);
       setDuracionOverride(res.duracionSegundos);
+      setDesdeMin(res.desdeMin);
+      setHastaMin(res.hastaMin);
       setClips(res.clips);
       setIndiceActual(null);
       if (res.clips.length > 0) setVideoActualId(res.clips[0].partido.youtubeVideoId);
@@ -128,6 +132,12 @@ export function BuscadorClips() {
               </span>
             ))}
             {duracionOverride && <span>· cada clip {duracionOverride}s</span>}
+            {(desdeMin !== null || hastaMin !== null) && (
+              <span>
+                · desde el minuto {desdeMin ?? 0}
+                {hastaMin !== null ? ` hasta el ${hastaMin}` : ""}
+              </span>
+            )}
           </div>
         )}
       </div>

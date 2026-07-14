@@ -1,6 +1,6 @@
 "use server";
 
-import { encontrarCategoriasCoincidentes, extraerDuracionSegundos } from "@/lib/videoanalisis/buscar-clips";
+import { encontrarCategoriasCoincidentes, extraerDuracionSegundos, extraerFranjaMinutos } from "@/lib/videoanalisis/buscar-clips";
 import { createClient } from "@/lib/supabase/server";
 
 export type ClipEncontrado = {
@@ -23,11 +23,13 @@ export type ResultadoBusquedaClips = {
   error: string | null;
   categoriasCoincidentes: string[];
   duracionSegundos: number | null;
+  desdeMin: number | null;
+  hastaMin: number | null;
   clips: ClipEncontrado[];
 };
 
 export async function buscarClips(consulta: string): Promise<ResultadoBusquedaClips> {
-  const vacio = { categoriasCoincidentes: [], duracionSegundos: null, clips: [] };
+  const vacio = { categoriasCoincidentes: [], duracionSegundos: null, desdeMin: null, hastaMin: null, clips: [] };
   if (!consulta.trim()) return { error: "Escribí qué querés buscar.", ...vacio };
 
   const supabase = await createClient();
@@ -37,6 +39,7 @@ export async function buscarClips(consulta: string): Promise<ResultadoBusquedaCl
 
   const categoriasCoincidentes = encontrarCategoriasCoincidentes(consulta, categoriasDisponibles);
   const duracionSegundos = extraerDuracionSegundos(consulta);
+  const { desdeMin, hastaMin } = extraerFranjaMinutos(consulta);
 
   if (categoriasCoincidentes.length === 0) {
     return {
@@ -82,6 +85,8 @@ export async function buscarClips(consulta: string): Promise<ResultadoBusquedaCl
 
   const clips: ClipEncontrado[] = ((acciones ?? []) as unknown as FilaAccion[])
     .filter((a) => a.partidos_va)
+    .filter((a) => desdeMin === null || a.inicio_seg >= desdeMin * 60)
+    .filter((a) => hastaMin === null || a.inicio_seg <= hastaMin * 60)
     .map((a) => ({
       id: a.id,
       codigo: a.codigo,
@@ -99,5 +104,5 @@ export async function buscarClips(consulta: string): Promise<ResultadoBusquedaCl
     }))
     .sort((a, b) => a.partido.fecha.localeCompare(b.partido.fecha) || a.inicioSeg - b.inicioSeg);
 
-  return { error: null, categoriasCoincidentes, duracionSegundos, clips };
+  return { error: null, categoriasCoincidentes, duracionSegundos, desdeMin, hastaMin, clips };
 }

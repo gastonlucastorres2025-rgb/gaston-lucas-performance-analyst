@@ -21,6 +21,14 @@ const PALABRAS_VACIAS = new Set([
   "segundo",
   "segundos",
   "seg",
+  "minuto",
+  "minutos",
+  "min",
+  "luego",
+  "despues",
+  "después",
+  "antes",
+  "partir",
   "video",
   "videos",
   "partido",
@@ -40,6 +48,13 @@ const PALABRAS_VACIAS = new Set([
   "para",
 ]);
 
+const RE_DURACION = /(\d+)\s*(segundo|seg)s?/i;
+const RE_DESDE = [
+  /(?:despues|después|luego)\s+de\s+(\d+)\s*(?:minutos?|min)?/i,
+  /(?:a partir del?|desde el?)\s+minuto\s+(\d+)/i,
+];
+const RE_HASTA = [/antes\s+de\s+(\d+)\s*(?:minutos?|min)?/i, /hasta el?\s+minuto\s+(\d+)/i];
+
 function normalizar(s: string): string {
   return s
     .normalize("NFD")
@@ -49,13 +64,41 @@ function normalizar(s: string): string {
 }
 
 export function extraerDuracionSegundos(texto: string): number | null {
-  const match = texto.match(/(\d+)\s*(segundo|seg)/i);
+  const match = texto.match(RE_DURACION);
   return match ? Number(match[1]) : null;
 }
 
+export function extraerFranjaMinutos(texto: string): { desdeMin: number | null; hastaMin: number | null } {
+  let desdeMin: number | null = null;
+  for (const re of RE_DESDE) {
+    const m = texto.match(re);
+    if (m) {
+      desdeMin = Number(m[1]);
+      break;
+    }
+  }
+  let hastaMin: number | null = null;
+  for (const re of RE_HASTA) {
+    const m = texto.match(re);
+    if (m) {
+      hastaMin = Number(m[1]);
+      break;
+    }
+  }
+  return { desdeMin, hastaMin };
+}
+
+// Saca las frases de duración/franja de minutos antes de tokenizar, para que
+// los números y palabras clave (20, minutos, luego...) no ensucien el
+// matching de categorías.
+function limpiarParaTokens(texto: string): string {
+  let limpio = texto.replace(RE_DURACION, " ");
+  for (const re of [...RE_DESDE, ...RE_HASTA]) limpio = limpio.replace(re, " ");
+  return limpio;
+}
+
 function tokensSignificativos(texto: string): string[] {
-  const sinNumerosDeSegundos = texto.replace(/\d+\s*(segundo|seg)s?/gi, "");
-  return normalizar(sinNumerosDeSegundos)
+  return normalizar(limpiarParaTokens(texto))
     .split(/[^a-z0-9]+/)
     .filter((t) => t && !PALABRAS_VACIAS.has(t));
 }
