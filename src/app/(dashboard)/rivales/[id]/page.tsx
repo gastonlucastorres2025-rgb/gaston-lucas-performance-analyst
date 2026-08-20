@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { InformeRivalPdfButton } from "@/components/rivales/informe-rival-pdf-button";
-import { EVALUACION_LABEL, type Evaluacion } from "@/lib/informes-post-partido-types";
+import { KeynoteUpload } from "@/components/rivales/keynote-upload";
+import { contarProgreso } from "@/lib/informes-post-partido-types";
 import { parseDateKey } from "@/lib/calendar-utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,7 +13,11 @@ export default async function RivalDetallePage({ params }: { params: Promise<{ i
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: rival } = await supabase.from("rivales").select("id, nombre, escudo_url").eq("id", id).maybeSingle();
+  const { data: rival } = await supabase
+    .from("rivales")
+    .select("id, nombre, escudo_url, keynote_url, keynote_nombre")
+    .eq("id", id)
+    .maybeSingle();
   if (!rival) notFound();
 
   const [{ data: planes }, { data: partidos }, { data: carpetas }, { data: informes }] = await Promise.all([
@@ -33,7 +38,7 @@ export default async function RivalDetallePage({ params }: { params: Promise<{ i
       .order("created_at", { ascending: false }),
     supabase
       .from("informes_post_partido")
-      .select("id, fecha, resultado, plan_funciono, plan_comentario, analisis_acertado, analisis_comentario, conclusiones_generales")
+      .select("id, fecha, resultado, fases, otras_observaciones")
       .eq("rival_id", id)
       .order("fecha", { ascending: false }),
   ]);
@@ -65,7 +70,12 @@ export default async function RivalDetallePage({ params }: { params: Promise<{ i
           <PageHeader title={rival.nombre} />
         </div>
         <InformeRivalPdfButton
-          rival={{ nombre: rival.nombre, escudoUrl: rival.escudo_url }}
+          rival={{
+            nombre: rival.nombre,
+            escudoUrl: rival.escudo_url,
+            keynoteUrl: rival.keynote_url,
+            keynoteNombre: rival.keynote_nombre,
+          }}
           planes={planes ?? []}
           partidos={partidos ?? []}
           carpetas={carpetas ?? []}
@@ -78,6 +88,7 @@ export default async function RivalDetallePage({ params }: { params: Promise<{ i
           <div className="rounded-t-xl bg-primary px-4 py-2.5">
             <h2 className="text-sm font-semibold text-white">Plan de partido</h2>
           </div>
+          <KeynoteUpload rivalId={rival.id} keynoteUrlInicial={rival.keynote_url} keynoteNombreInicial={rival.keynote_nombre} />
           <div className="flex flex-col gap-2 p-4">
             {planes && planes.length > 0 ? (
               planes.map((p) => (
@@ -171,20 +182,23 @@ export default async function RivalDetallePage({ params }: { params: Promise<{ i
           </div>
           <div className="flex flex-col gap-2 p-4">
             {informes && informes.length > 0 ? (
-              informes.map((i) => (
-                <Link
-                  key={i.id}
-                  href={`/informes-post-partido/${i.id}`}
-                  className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-primary/5"
-                >
-                  <p className="font-medium">{[i.fecha, i.resultado].filter(Boolean).join(" · ") || "Sin datos"}</p>
-                  {i.plan_funciono && (
-                    <p className="text-xs text-foreground/50">
-                      Plan: {EVALUACION_LABEL[i.plan_funciono as Evaluacion]}
-                    </p>
-                  )}
-                </Link>
-              ))
+              informes.map((i) => {
+                const { respondidas, total } = contarProgreso(i.fases);
+                return (
+                  <Link
+                    key={i.id}
+                    href={`/informes-post-partido/${i.id}`}
+                    className="rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-primary/5"
+                  >
+                    <p className="font-medium">{[i.fecha, i.resultado].filter(Boolean).join(" · ") || "Sin datos"}</p>
+                    {total > 0 && (
+                      <p className="text-xs text-foreground/50">
+                        {respondidas}/{total} preguntas respondidas
+                      </p>
+                    )}
+                  </Link>
+                );
+              })
             ) : (
               <p className="text-xs text-foreground/40">Sin informes cargados.</p>
             )}

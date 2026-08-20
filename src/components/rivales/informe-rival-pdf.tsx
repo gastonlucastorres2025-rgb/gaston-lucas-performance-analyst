@@ -1,5 +1,6 @@
 import { Document, Image, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { COLORS, registerPdfFonts } from "@/lib/pdf-theme";
+import { EVALUACION_LABEL, FASES_INFORME, type RespuestasFase } from "@/lib/informes-post-partido-types";
 
 registerPdfFonts();
 
@@ -96,22 +97,16 @@ type Partido = {
 
 type Carpeta = { id: string; ronda: string; competencia: string; fases: { nombre: string; link: string }[] };
 
-type Evaluacion = "" | "si" | "no" | "parcial";
-const EVALUACION_LABEL: Record<Evaluacion, string> = { "": "Sin definir", si: "Sí", no: "No", parcial: "Parcialmente" };
-
 type InformePostPartido = {
   id: string;
   fecha: string | null;
   resultado: string;
-  plan_funciono: Evaluacion;
-  plan_comentario: string;
-  analisis_acertado: Evaluacion;
-  analisis_comentario: string;
-  conclusiones_generales: string;
+  fases: Record<string, RespuestasFase>;
+  otras_observaciones: string;
 };
 
 export type InformeRivalPdfData = {
-  rival: { nombre: string; escudoUrl: string | null };
+  rival: { nombre: string; escudoUrl: string | null; keynoteUrl: string | null; keynoteNombre: string | null };
   planes: Plan[];
   partidos: Partido[];
   carpetas: Carpeta[];
@@ -177,6 +172,13 @@ export function InformeRivalPdfDocument({ data }: { data: InformeRivalPdfData })
         {data.planes.map((plan) => (
           <View key={plan.id} break>
             <Text style={styles.seccionTitulo}>Plan de partido{plan.fecha ? ` — ${plan.fecha}` : ""}</Text>
+            {data.rival.keynoteUrl && (
+              <Link src={data.rival.keynoteUrl}>
+                <Text style={[styles.bodyText, { color: COLORS.blue, marginBottom: 8 }]}>
+                  📎 Keynote adjunto: {data.rival.keynoteNombre || "ver archivo"}
+                </Text>
+              </Link>
+            )}
             <SeccionSimple titulo="Fase ofensiva" conclusion={plan.fase_ofensiva.conclusion} color={COLORS.blue} />
             <SeccionSimple
               titulo="Transiciones ofensivas"
@@ -295,41 +297,35 @@ export function InformeRivalPdfDocument({ data }: { data: InformeRivalPdfData })
                 <Text style={[styles.bodyText, { fontWeight: 700, marginBottom: 6 }]}>
                   {[i.fecha, i.resultado].filter(Boolean).join(" · ") || "Sin datos"}
                 </Text>
-                {(i.plan_funciono || i.plan_comentario) && (
-                  <View style={styles.sectionCard} wrap={false}>
-                    <View style={[styles.sectionHeader, { backgroundColor: COLORS.blue }]}>
-                      <Text style={styles.sectionHeaderTitle}>
-                        ¿Salió el plan? {i.plan_funciono ? `— ${EVALUACION_LABEL[i.plan_funciono]}` : ""}
-                      </Text>
-                    </View>
-                    {i.plan_comentario && (
-                      <View style={styles.sectionBody}>
-                        <Text style={styles.bodyText}>{i.plan_comentario}</Text>
+                {FASES_INFORME.map((fase) => {
+                  const valor = i.fases?.[fase.key];
+                  const respuestas = fase.preguntas
+                    .map((p) => ({ texto: p.texto, valor: valor?.respuestas?.[p.key] }))
+                    .filter((r) => r.valor);
+                  if (respuestas.length === 0 && !valor?.comentario) return null;
+                  return (
+                    <View key={fase.key} style={styles.sectionCard} wrap={false}>
+                      <View style={[styles.sectionHeader, { backgroundColor: COLORS.blue }]}>
+                        <Text style={styles.sectionHeaderTitle}>{fase.label}</Text>
                       </View>
-                    )}
-                  </View>
-                )}
-                {(i.analisis_acertado || i.analisis_comentario) && (
-                  <View style={styles.sectionCard} wrap={false}>
-                    <View style={[styles.sectionHeader, { backgroundColor: COLORS.amber }]}>
-                      <Text style={styles.sectionHeaderTitle}>
-                        ¿El análisis fue acertado? {i.analisis_acertado ? `— ${EVALUACION_LABEL[i.analisis_acertado]}` : ""}
-                      </Text>
-                    </View>
-                    {i.analisis_comentario && (
                       <View style={styles.sectionBody}>
-                        <Text style={styles.bodyText}>{i.analisis_comentario}</Text>
+                        {respuestas.map((r, idx) => (
+                          <Text key={idx} style={[styles.bodyText, { marginBottom: 3 }]}>
+                            {r.texto} — {EVALUACION_LABEL[r.valor!]}
+                          </Text>
+                        ))}
+                        {valor?.comentario && <Text style={[styles.bodyText, { marginTop: 3 }]}>{valor.comentario}</Text>}
                       </View>
-                    )}
-                  </View>
-                )}
-                {i.conclusiones_generales && (
+                    </View>
+                  );
+                })}
+                {i.otras_observaciones && (
                   <View style={styles.sectionCard} wrap={false}>
                     <View style={[styles.sectionHeader, { backgroundColor: COLORS.red }]}>
-                      <Text style={styles.sectionHeaderTitle}>Conclusiones generales</Text>
+                      <Text style={styles.sectionHeaderTitle}>Otras observaciones</Text>
                     </View>
                     <View style={styles.sectionBody}>
-                      <Text style={styles.bodyText}>{i.conclusiones_generales}</Text>
+                      <Text style={styles.bodyText}>{i.otras_observaciones}</Text>
                     </View>
                   </View>
                 )}

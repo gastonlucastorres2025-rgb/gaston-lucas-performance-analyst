@@ -36,7 +36,9 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: { fontSize: 10, fontWeight: 700, color: "#ffffff" },
   sectionBody: { padding: 10 },
   bodyText: { fontSize: 9.5, lineHeight: 1.5, color: COLORS.ink },
-  emptyText: { fontSize: 9, color: "#999", fontStyle: "italic" },
+  // Sin "fontStyle: italic": la fuente Inter registrada no tiene variante itálica (no hay
+  // Inter-Italic.ttf en public/fonts), y @react-pdf revienta en runtime si no puede resolverla.
+  emptyText: { fontSize: 9, color: "#999" },
 
   table: { border: `1 solid ${COLORS.border}`, borderRadius: 6, overflow: "hidden" },
   tableRow: { flexDirection: "row", borderBottom: `1 solid ${COLORS.border}` },

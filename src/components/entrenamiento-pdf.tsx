@@ -53,7 +53,9 @@ const styles = StyleSheet.create({
   linkRowLast: { borderBottom: "none" },
   linkLabel: { fontSize: 9.5, fontWeight: 500, color: COLORS.ink, flex: 1, paddingRight: 8 },
   linkUrl: { fontSize: 9, fontWeight: 600, color: COLORS.blue, textDecoration: "none" },
-  emptyText: { fontSize: 9, color: "#999", fontStyle: "italic" },
+  // Sin "fontStyle: italic": la fuente Inter registrada no tiene variante itálica (no hay
+  // Inter-Italic.ttf en public/fonts), y @react-pdf revienta en runtime si no puede resolverla.
+  emptyText: { fontSize: 9, color: "#999" },
 
   footer: {
     position: "absolute",

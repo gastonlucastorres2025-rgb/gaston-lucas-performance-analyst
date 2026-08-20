@@ -1,0 +1,51 @@
+[
+  {
+    "id": "fixture-evt-0001",
+    "index": 1,
+    "period": 1,
+    "timestamp": "00:00:00.000",
+    "minute": 0,
+    "second": 0,
+    "type": { "id": 35, "name": "Starting XI" },
+    "possession": 1,
+    "possession_team": { "id": 1001, "name": "Equipo Local (FIXTURE)" },
+    "play_pattern": { "id": 1, "name": "Regular Play" },
+    "team": { "id": 1001, "name": "Equipo Local (FIXTURE)" }
+  },
+  {
+    "id": "fixture-evt-0002",
+    "index": 25,
+    "period": 1,
+    "timestamp": "00:02:14.120",
+    "minute": 2,
+    "second": 14,
+    "type": { "id": 30, "name": "Pass" },
+    "possession": 2,
+    "possession_team": { "id": 1001, "name": "Equipo Local (FIXTURE)" },
+    "play_pattern": { "id": 1, "name": "Regular Play" },
+    "team": { "id": 1001, "name": "Equipo Local (FIXTURE)" },
+    "player": { "id": 20001, "name": "Jugador Ejemplo A (FIXTURE)" },
+    "position": { "id": 14, "name": "Center Midfield" },
+    "location": [61.2, 40.5],
+    "under_pressure": false,
+    "pass": { "length": 18.4, "angle": 0.3, "height": { "id": 1, "name": "Ground Pass" }, "outcome": null }
+  },
+  {
+    "id": "fixture-evt-0003",
+    "index": 140,
+    "period": 1,
+    "timestamp": "00:15:02.500",
+    "minute": 15,
+    "second": 2,
+    "type": { "id": 16, "name": "Shot" },
+    "possession": 9,
+    "possession_team": { "id": 1001, "name": "Equipo Local (FIXTURE)" },
+    "play_pattern": { "id": 7, "name": "From Counter" },
+    "team": { "id": 1001, "name": "Equipo Local (FIXTURE)" },
+    "player": { "id": 20002, "name": "Jugador Ejemplo B (FIXTURE)" },
+    "position": { "id": 23, "name": "Striker" },
+    "location": [104.3, 38.1],
+    "under_pressure": true,
+    "shot": { "statsbomb_xg": 0.18, "outcome": { "id": 97, "name": "Off T" }, "body_part": { "id": 40, "name": "Right Foot" } }
+  }
+]

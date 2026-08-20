@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { TareasNotifier } from "@/components/tareas-notifier";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,8 +18,10 @@ const NAV_ITEMS = [
   { href: "/videoanalisis", label: "Videoanálisis" },
   { href: "/analisis-rival", label: "Análisis de Rival" },
   { href: "/fases-rival", label: "Fases del Rival" },
+  { href: "/statsbomb", label: "Informe StatsBomb" },
   { href: "/informes-post-partido", label: "Informe Post Partido" },
   { href: "/scouting", label: "Scouting" },
+  { href: "/seguimiento-internacional", label: "Seguimiento Internacional" },
   { href: "/videos", label: "Videos" },
   { href: "/tareas", label: "Tareas" },
   { href: "/configuracion/equipo", label: "Configuración" },
@@ -32,6 +35,23 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const [perfil, setPerfil] = useState<{ nombre: string; soloLectura: boolean } | null>(null);
+
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("staff_users").select("nombre, solo_lectura").eq("id", user.id).single();
+      if (activo && data) setPerfil({ nombre: data.nombre, soloLectura: data.solo_lectura });
+    })();
+    return () => {
+      activo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo se necesita una vez al montar
+  }, []);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -54,9 +74,14 @@ export default function DashboardLayout({
             <div className="text-sm font-semibold text-white">
               Cuerpo Técnico
             </div>
-            <div className="text-xs text-white/60">Jorge Bava</div>
+            <div className="text-xs text-white/60">{perfil?.nombre ?? " "}</div>
           </div>
         </div>
+        {perfil?.soloLectura && (
+          <div className="mx-3 mt-3 rounded-md bg-accent/20 px-3 py-2 text-xs font-medium text-white">
+            👁 Modo solo lectura — podés navegar y descargar, pero no guardar cambios.
+          </div>
+        )}
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
           {NAV_ITEMS.map((item) => {
             const isActive =

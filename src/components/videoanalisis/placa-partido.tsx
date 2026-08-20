@@ -43,10 +43,10 @@ export function PlacaPartido({
   return (
     <div className="flex flex-col items-center gap-2">
       {competencia?.nombre && (
-        <div className="flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-foreground/60">
+        <div className="flex items-center gap-2 rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-foreground/60">
           {competencia.logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={competencia.logoUrl} alt="" width={14} height={14} className="shrink-0 object-contain" />
+            <img src={competencia.logoUrl} alt="" width={22} height={22} className="shrink-0 object-contain" />
           )}
           <span className="truncate">{competencia.nombre}</span>
         </div>

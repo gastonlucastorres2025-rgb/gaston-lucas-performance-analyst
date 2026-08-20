@@ -52,7 +52,7 @@ export default function LoginPage() {
           Cuerpo Técnico
         </h1>
         <p className="-mt-2 text-center text-xs text-foreground/60">
-          Jorge Bava
+          Gastón Lucas Torres
         </p>
         <input
           type="email"

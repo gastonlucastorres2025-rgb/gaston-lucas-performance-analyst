@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { AgregarAPlaylistBoton } from "@/components/videoanalisis/agregar-a-playlist-boton";
+import { useColaReproduccion, type ClipDeCola } from "@/components/videoanalisis/use-cola-reproduccion";
 import { YoutubePlayer, type YoutubePlayerHandle } from "@/components/videoanalisis/youtube-player";
 import { buscarClips, type ClipEncontrado } from "@/lib/videoanalisis/buscar-clips-actions";
 
@@ -12,8 +14,6 @@ function formatMinuto(segundos: number): string {
 
 export function BuscadorClips() {
   const playerRef = useRef<YoutubePlayerHandle>(null);
-  const avanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reproduciendoRef = useRef(false);
 
   const [consulta, setConsulta] = useState("");
   const [buscando, setBuscando] = useState(false);
@@ -24,8 +24,22 @@ export function BuscadorClips() {
   const [hastaMin, setHastaMin] = useState<number | null>(null);
   const [clips, setClips] = useState<ClipEncontrado[]>([]);
   const [videoActualId, setVideoActualId] = useState<string | null>(null);
-  const [indiceActual, setIndiceActual] = useState<number | null>(null);
-  const [reproduciendo, setReproduciendo] = useState(false);
+
+  // Si la consulta pidió una duración fija por clip, se usa esa en vez del fin_seg real del corte
+  // (sigue cortando por tiempo real de reproducción, no por temporizador — solo cambia el objetivo).
+  const clipsParaCola = useMemo<ClipDeCola[]>(
+    () =>
+      clips.map((c) => ({
+        id: c.id,
+        inicioSeg: c.inicioSeg,
+        finSeg: duracionOverride != null ? c.inicioSeg + duracionOverride : c.finSeg,
+        youtubeVideoId: c.partido.youtubeVideoId,
+        offsetSegundos: c.partido.offsetSegundos,
+      })),
+    [clips, duracionOverride],
+  );
+
+  const { indiceActual, reproduciendo, irAClip, reproducirDesde, detener } = useColaReproduccion(playerRef, clipsParaCola);
 
   async function handleBuscar() {
     if (!consulta.trim()) return;
@@ -45,50 +59,20 @@ export function BuscadorClips() {
       setDesdeMin(res.desdeMin);
       setHastaMin(res.hastaMin);
       setClips(res.clips);
-      setIndiceActual(null);
       if (res.clips.length > 0) setVideoActualId(res.clips[0].partido.youtubeVideoId);
     } finally {
       setBuscando(false);
     }
   }
 
-  function irAClip(i: number) {
-    const clip = clips[i];
-    if (!clip) return;
-    setIndiceActual(i);
-    if (clip.partido.youtubeVideoId !== videoActualId) {
-      setVideoActualId(clip.partido.youtubeVideoId);
-      playerRef.current?.cargarVideo(clip.partido.youtubeVideoId, clip.inicioSeg + clip.partido.offsetSegundos);
-    } else {
-      playerRef.current?.seekTo(clip.inicioSeg + clip.partido.offsetSegundos);
-    }
-  }
-
-  function detener() {
-    reproduciendoRef.current = false;
-    setReproduciendo(false);
-    if (avanceRef.current) clearTimeout(avanceRef.current);
-  }
-
-  function reproducirDesde(i: number) {
-    if (i >= clips.length) {
-      detener();
-      return;
-    }
-    const clip = clips[i];
-    const duracion = duracionOverride ?? Math.max(1, Math.round(clip.finSeg - clip.inicioSeg));
+  function handleClickClip(i: number) {
+    detener();
     irAClip(i);
-
-    avanceRef.current = setTimeout(() => {
-      if (!reproduciendoRef.current) return;
-      reproducirDesde(i + 1);
-    }, duracion * 1000);
+    setVideoActualId(clipsParaCola[i]?.youtubeVideoId ?? videoActualId);
   }
 
   function handleReproducirTodo() {
     if (clips.length === 0) return;
-    reproduciendoRef.current = true;
-    setReproduciendo(true);
     reproducirDesde(0);
   }
 
@@ -166,31 +150,31 @@ export function BuscadorClips() {
           ) : (
             <div className="divide-y divide-border">
               {clips.map((clip, i) => (
-                <button
+                <div
                   key={clip.id}
-                  onClick={() => {
-                    detener();
-                    irAClip(i);
-                  }}
-                  className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-primary/5 ${
-                    indiceActual === i ? "bg-primary/5" : ""
-                  }`}
+                  className={`flex items-center gap-1 px-1 ${indiceActual === i ? "bg-primary/5" : ""}`}
                 >
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: clip.colorHex ?? "#5f5e5a" }}
-                  />
-                  <span className="w-12 shrink-0 font-mono text-xs text-foreground/50">
-                    {formatMinuto(clip.inicioSeg)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{clip.partido.rival}</span>
-                    <span className="block truncate text-xs text-foreground/40">
-                      {clip.partido.fecha}
-                      {clip.partido.competencia ? ` · ${clip.partido.competencia}` : ""}
+                  <button
+                    onClick={() => handleClickClip(i)}
+                    className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left text-sm transition-colors hover:bg-primary/5"
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: clip.colorHex ?? "#5f5e5a" }}
+                    />
+                    <span className="w-12 shrink-0 font-mono text-xs text-foreground/50">
+                      {formatMinuto(clip.inicioSeg)}
                     </span>
-                  </span>
-                </button>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{clip.partido.rival}</span>
+                      <span className="block truncate text-xs text-foreground/40">
+                        {clip.partido.fecha}
+                        {clip.partido.competencia ? ` · ${clip.partido.competencia}` : ""}
+                      </span>
+                    </span>
+                  </button>
+                  <AgregarAPlaylistBoton accionId={clip.id} />
+                </div>
               ))}
             </div>
           )}

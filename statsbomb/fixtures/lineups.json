@@ -1,0 +1,29 @@
+[
+  {
+    "team_id": 1001,
+    "team_name": "Equipo Local (FIXTURE)",
+    "lineup": [
+      {
+        "player_id": 20001,
+        "player_name": "Jugador Ejemplo A (FIXTURE)",
+        "player_nickname": null,
+        "jersey_number": 8,
+        "country": { "id": 241, "name": "Uruguay" },
+        "positions": [
+          {
+            "position_id": 14,
+            "position": "Center Midfield",
+            "from": "00:00:00.000",
+            "to": null,
+            "from_period": 1,
+            "to_period": null,
+            "start_reason": "Starting XI",
+            "end_reason": null
+          }
+        ],
+        "stats": { "goals": 0, "assists": 1, "own_goals": 0, "penalties_missed": 0, "penalties_saved": 0, "penalties_scored": 0 }
+      }
+    ],
+    "formations": [{ "period": 1, "timestamp": "00:00:00.000", "reason": "Starting XI", "formation": 433 }]
+  }
+]

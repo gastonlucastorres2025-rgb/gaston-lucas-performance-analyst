@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { PartidoVACard } from "@/components/videoanalisis/partido-va-card";
+import { SincronizarSheetButton } from "@/components/videoanalisis/sincronizar-sheet-button";
+import { resolverLogoCompetencia } from "@/lib/videoanalisis/competencia-logo";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +25,22 @@ export default async function VideoanalisisPage() {
         <PageHeader title="Videoanálisis" description="Partidos analizados, con video y etiquetado listos para filtrar." />
         <div className="flex shrink-0 items-center gap-2">
           <Link
+            href="/videoanalisis/estadisticas"
+            className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+          >
+            Reportes estadísticos
+          </Link>
+          <Link
             href="/videoanalisis/buscar"
             className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
           >
             Buscar clips
+          </Link>
+          <Link
+            href="/videoanalisis/playlists"
+            className="rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+          >
+            Playlists
           </Link>
           <Link
             href="/videoanalisis/nuevo"
@@ -34,6 +48,7 @@ export default async function VideoanalisisPage() {
           >
             + Nuevo partido
           </Link>
+          <SincronizarSheetButton />
         </div>
       </div>
 
@@ -43,7 +58,7 @@ export default async function VideoanalisisPage() {
             <PartidoVACard
               key={p.id}
               partido={p}
-              logoCompetencia={(p.competencia && logosPorCompetencia.get(p.competencia)) || null}
+              logoCompetencia={resolverLogoCompetencia(p.competencia, logosPorCompetencia)}
             />
           ))}
         </div>

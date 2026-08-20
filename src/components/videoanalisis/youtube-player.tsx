@@ -7,6 +7,7 @@ type YTPlayerInstance = {
   playVideo: () => void;
   pauseVideo: () => void;
   loadVideoById: (videoId: string, startSeconds?: number) => void;
+  getCurrentTime: () => number;
   destroy: () => void;
 };
 
@@ -30,6 +31,8 @@ export type YoutubePlayerHandle = {
   seekTo: (seconds: number) => void;
   cargarVideo: (videoId: string, startSeconds?: number) => void;
   pausar: () => void;
+  /** Tiempo real de reproducción (segundos) — para cortar con precisión en el fin de un corte, no por temporizador. */
+  getCurrentTime: () => number;
 };
 
 let apiPromise: Promise<void> | null = null;
@@ -85,6 +88,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, { videoId: string }
       pausar: () => {
         playerRef.current?.pauseVideo();
       },
+      getCurrentTime: () => playerRef.current?.getCurrentTime() ?? 0,
     }),
     [],
   );

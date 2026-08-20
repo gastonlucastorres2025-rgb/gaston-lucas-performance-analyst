@@ -14,11 +14,19 @@ const COLUMNA_IMAGEN: Record<CampoImagen, string> = {
   principal: "principal_imagen_url",
 };
 
+export type Espacio = "chico" | "mediano" | "grande";
+
 export type SesionPlanInput = {
   lugar: string;
   activacion: string;
+  activacion_enfoque: string;
+  activacion_espacio: Espacio | "";
   introductorio: string;
+  introductorio_enfoque: string;
+  introductorio_espacio: Espacio | "";
   principal: string;
+  principal_enfoque: string;
+  principal_espacio: Espacio | "";
   objetivos_tarea: string;
   objetivos_fisicos: string;
 };
@@ -42,12 +50,18 @@ export async function guardarPlanSesion(fecha: string, plan: SesionPlanInput) {
   const teamId = await getTeamId();
   if (!teamId) return { error: "No autenticado." };
 
-  const { error } = await supabase
-    .from("sesiones")
-    .upsert(
-      { team_id: teamId, fecha, ...plan, updated_at: new Date().toISOString() },
-      { onConflict: "team_id,fecha" },
-    );
+  const { error } = await supabase.from("sesiones").upsert(
+    {
+      team_id: teamId,
+      fecha,
+      ...plan,
+      activacion_espacio: plan.activacion_espacio || null,
+      introductorio_espacio: plan.introductorio_espacio || null,
+      principal_espacio: plan.principal_espacio || null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "team_id,fecha" },
+  );
 
   if (error) return { error: error.message };
   revalidatePath(`/planificacion/${fecha}`);

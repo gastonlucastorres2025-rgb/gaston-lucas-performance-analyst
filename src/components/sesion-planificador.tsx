@@ -11,8 +11,15 @@ import {
   subirImagenPlan,
   type CampoImagen,
   type Equipo,
+  type Espacio,
   type EstadoJugador,
 } from "@/lib/sesiones-actions";
+
+const ESPACIO_OPCIONES: { value: Espacio; label: string }[] = [
+  { value: "chico", label: "Chico" },
+  { value: "mediano", label: "Mediano" },
+  { value: "grande", label: "Grande" },
+];
 
 type Jugador = {
   id: string;
@@ -26,8 +33,14 @@ type Jugador = {
 type Sesion = {
   lugar: string | null;
   activacion: string | null;
+  activacion_enfoque: string | null;
+  activacion_espacio: Espacio | null;
   introductorio: string | null;
+  introductorio_enfoque: string | null;
+  introductorio_espacio: Espacio | null;
   principal: string | null;
+  principal_enfoque: string | null;
+  principal_espacio: Espacio | null;
   objetivos_tarea: string | null;
   objetivos_fisicos: string | null;
   activacion_imagen_url: string | null;
@@ -86,8 +99,14 @@ export function SesionPlanificador({
   const [plan, setPlan] = useState({
     lugar: sesion?.lugar ?? "",
     activacion: sesion?.activacion ?? "",
+    activacion_enfoque: sesion?.activacion_enfoque ?? "",
+    activacion_espacio: (sesion?.activacion_espacio ?? "") as Espacio | "",
     introductorio: sesion?.introductorio ?? "",
+    introductorio_enfoque: sesion?.introductorio_enfoque ?? "",
+    introductorio_espacio: (sesion?.introductorio_espacio ?? "") as Espacio | "",
     principal: sesion?.principal ?? "",
+    principal_enfoque: sesion?.principal_enfoque ?? "",
+    principal_espacio: (sesion?.principal_espacio ?? "") as Espacio | "",
     objetivos_tarea: sesion?.objetivos_tarea ?? "",
     objetivos_fisicos: sesion?.objetivos_fisicos ?? "",
   });
@@ -251,8 +270,14 @@ export function SesionPlanificador({
             fecha,
             lugar: plan.lugar,
             activacion: plan.activacion,
+            activacionEnfoque: plan.activacion_enfoque,
+            activacionEspacio: plan.activacion_espacio,
             introductorio: plan.introductorio,
+            introductorioEnfoque: plan.introductorio_enfoque,
+            introductorioEspacio: plan.introductorio_espacio,
             principal: plan.principal,
+            principalEnfoque: plan.principal_enfoque,
+            principalEspacio: plan.principal_espacio,
             objetivos_tarea: plan.objetivos_tarea,
             objetivos_fisicos: plan.objetivos_fisicos,
             activacionImagenUrl: imagenes.activacion,
@@ -312,6 +337,10 @@ export function SesionPlanificador({
             imagenError={imagenError.activacion}
             onSubirImagen={handleSubirImagen}
             onQuitarImagen={handleQuitarImagen}
+            enfoqueValue={plan.activacion_enfoque}
+            onEnfoqueChange={(v) => setPlan({ ...plan, activacion_enfoque: v })}
+            espacioValue={plan.activacion_espacio}
+            onEspacioChange={(v) => setPlan({ ...plan, activacion_espacio: v })}
           />
           <Campo
             label="Introductorio"
@@ -323,6 +352,10 @@ export function SesionPlanificador({
             imagenError={imagenError.introductorio}
             onSubirImagen={handleSubirImagen}
             onQuitarImagen={handleQuitarImagen}
+            enfoqueValue={plan.introductorio_enfoque}
+            onEnfoqueChange={(v) => setPlan({ ...plan, introductorio_enfoque: v })}
+            espacioValue={plan.introductorio_espacio}
+            onEspacioChange={(v) => setPlan({ ...plan, introductorio_espacio: v })}
           />
           <Campo
             label="Principal"
@@ -334,6 +367,10 @@ export function SesionPlanificador({
             imagenError={imagenError.principal}
             onSubirImagen={handleSubirImagen}
             onQuitarImagen={handleQuitarImagen}
+            enfoqueValue={plan.principal_enfoque}
+            onEnfoqueChange={(v) => setPlan({ ...plan, principal_enfoque: v })}
+            espacioValue={plan.principal_espacio}
+            onEspacioChange={(v) => setPlan({ ...plan, principal_espacio: v })}
           />
           <Campo
             label="Objetivos de la tarea"
@@ -451,9 +488,9 @@ export function SesionPlanificador({
             </div>
           </div>
 
-          {equipos.map((eq) => (
+          {equipos.map((eq, i) => (
             <div
-              key={eq.nombre}
+              key={i}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDropEnEquipo(e, eq.nombre)}
               className="min-h-[160px] rounded-lg border border-t-4 border-t-accent/60 border-border bg-background/40 p-2"
@@ -524,6 +561,10 @@ function Campo({
   imagenError,
   onSubirImagen,
   onQuitarImagen,
+  enfoqueValue,
+  onEnfoqueChange,
+  espacioValue,
+  onEspacioChange,
 }: {
   label: string;
   value: string;
@@ -534,18 +575,54 @@ function Campo({
   imagenError?: string | null;
   onSubirImagen?: (campo: CampoImagen, file: File) => void;
   onQuitarImagen?: (campo: CampoImagen) => void;
+  enfoqueValue?: string;
+  onEnfoqueChange?: (v: string) => void;
+  espacioValue?: Espacio | "";
+  onEspacioChange?: (v: Espacio | "") => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tieneEnfoqueEspacio = onEnfoqueChange !== undefined && onEspacioChange !== undefined;
 
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-foreground/50">{label}</span>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={2}
-        className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
-      />
+    <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-background/30 p-3">
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-medium text-foreground/50">{label}</span>
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={2}
+          className="rounded border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none"
+        />
+      </label>
+
+      {tieneEnfoqueEspacio && (
+        <div className="flex gap-3">
+          <label className="flex flex-1 flex-col gap-1">
+            <span className="text-xs font-medium text-foreground/50">Enfoque</span>
+            <input
+              type="text"
+              value={enfoqueValue}
+              onChange={(e) => onEnfoqueChange?.(e.target.value)}
+              className="rounded border border-border bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+          </label>
+          <label className="flex w-48 shrink-0 flex-col gap-1">
+            <span className="text-xs font-medium text-foreground/50">Espacio</span>
+            <select
+              value={espacioValue}
+              onChange={(e) => onEspacioChange?.(e.target.value as Espacio | "")}
+              className="rounded border border-border bg-surface px-3 py-2 text-sm font-medium focus:border-primary focus:outline-none"
+            >
+              <option value="">Sin definir</option>
+              {ESPACIO_OPCIONES.map((op) => (
+                <option key={op.value} value={op.value}>
+                  {op.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
 
       {campo && (
         <div className="mt-1">
@@ -587,6 +664,6 @@ function Campo({
           )}
         </div>
       )}
-    </label>
+    </div>
   );
 }

@@ -34,13 +34,24 @@ export function PartidoVACard({
       href={`/videoanalisis/${partido.id}`}
       className="group overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="relative aspect-video w-full overflow-hidden bg-black">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`https://img.youtube.com/vi/${partido.youtube_video_id}/mqdefault.jpg`}
-          alt=""
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-        />
+      <div className="relative aspect-video w-full overflow-hidden">
+        {logoCompetencia ? (
+          <div className="flex h-full w-full items-center justify-center bg-white p-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoCompetencia}
+              alt=""
+              className="h-full w-full object-contain transition-transform group-hover:scale-105"
+            />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`https://img.youtube.com/vi/${partido.youtube_video_id}/mqdefault.jpg`}
+            alt=""
+            className="h-full w-full bg-black object-cover transition-transform group-hover:scale-105"
+          />
+        )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-primary opacity-0 shadow-md transition-opacity group-hover:opacity-100">
             ▶

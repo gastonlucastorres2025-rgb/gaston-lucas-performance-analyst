@@ -1,0 +1,383 @@
+{
+  "_nota": "Catálogo de métricas del módulo StatsBomb. Cada métrica cita el campo exacto de Team Match Stats v3, verificado contra respuestas reales de la API (partidos de Wanderers y Nacional, temporada 2026, cuenta del club). 'fase' agrupa la métrica en la página del informe donde se muestra.",
+  "version": 4,
+  "muestra": {
+    "criterio": "Últimos 6 partidos disponibles (status=available) del equipo, ordenados por fecha descendente.",
+    "razon": "El fútbol cambia a corto plazo (cambios de DT, lesiones, ajustes tácticos); una muestra reciente representa mejor al rival que el acumulado anual completo.",
+    "agregacion": "Promedio simple por partido de la muestra. Los campos con unit '%' vienen de la API como fracción 0-1 y se escalan x100 al mostrarse."
+  },
+  "metrics": [
+    {
+      "id": "goalsPerMatch",
+      "name": "Goles por partido",
+      "fase": "identidad",
+      "formula": "avg(team_match_goals)",
+      "unit": "goles/partido",
+      "source": "team_match_goals"
+    },
+    {
+      "id": "goalsConcededPerMatch",
+      "name": "Goles recibidos por partido",
+      "fase": "identidad",
+      "formula": "avg(team_match_goals_conceded)",
+      "unit": "goles/partido",
+      "source": "team_match_goals_conceded",
+      "invert": true
+    },
+    {
+      "id": "gdPerMatch",
+      "name": "Diferencia de gol por partido",
+      "fase": "identidad",
+      "formula": "avg(team_match_gd)",
+      "unit": "goles/partido",
+      "source": "team_match_gd",
+      "interpretation": "Balance directo de resultado — resume rendimiento ofensivo y defensivo en un solo número."
+    },
+    {
+      "id": "xgdPerMatch",
+      "name": "Diferencia de xG por partido",
+      "fase": "identidad",
+      "formula": "avg(team_match_xgd)",
+      "unit": "xG/partido",
+      "source": "team_match_xgd",
+      "interpretation": "Más estable que la diferencia de gol real — mide calidad de juego generado vs. concedido, sin el ruido de la definición."
+    },
+    {
+      "id": "passesPerMatch",
+      "name": "Pases totales por partido",
+      "fase": "identidad",
+      "formula": "avg(team_match_passes)",
+      "unit": "pases/partido",
+      "source": "team_match_passes"
+    },
+    {
+      "id": "directness",
+      "name": "Directitud del juego",
+      "fase": "identidad",
+      "formula": "avg(team_match_directness)",
+      "unit": "índice (0-1, mayor = más directo)",
+      "source": "team_match_directness",
+      "interpretation": "Valores altos indican juego más directo/vertical; valores bajos, más circulación y paciencia."
+    },
+    {
+      "id": "npxgPerMatch",
+      "name": "xG (sin penales) por partido",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_np_xg)",
+      "unit": "xG/partido",
+      "source": "team_match_np_xg",
+      "interpretation": "Mayor valor = mayor generación de ocasiones de calidad en juego abierto."
+    },
+    {
+      "id": "npxgConcededPerMatch",
+      "name": "xG concedido (sin penales) por partido",
+      "fase": "defensiva",
+      "formula": "avg(team_match_np_xg_conceded)",
+      "unit": "xG/partido",
+      "source": "team_match_np_xg_conceded",
+      "invert": true
+    },
+    {
+      "id": "npxgPerShot",
+      "name": "xG por remate (sin penales)",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_np_xg_per_shot)",
+      "unit": "xG/remate",
+      "source": "team_match_np_xg_per_shot",
+      "interpretation": "Valores altos sugieren remates desde posiciones de alta probabilidad de gol."
+    },
+    {
+      "id": "shotsPerMatch",
+      "name": "Remates por partido",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_np_shots)",
+      "unit": "remates/partido",
+      "source": "team_match_np_shots"
+    },
+    {
+      "id": "shotsConcededPerMatch",
+      "name": "Remates concedidos por partido",
+      "fase": "defensiva",
+      "formula": "avg(team_match_np_shots_conceded)",
+      "unit": "remates/partido",
+      "source": "team_match_np_shots_conceded",
+      "invert": true
+    },
+    {
+      "id": "possessionPercentage",
+      "name": "Posesión (%)",
+      "fase": "identidad",
+      "formula": "avg(team_match_possession)",
+      "unit": "%",
+      "source": "team_match_possession"
+    },
+    {
+      "id": "passingRatio",
+      "name": "Precisión de pase (%)",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_passing_ratio)",
+      "unit": "%",
+      "source": "team_match_passing_ratio"
+    },
+    {
+      "id": "deepCompletionsPerMatch",
+      "name": "Completions profundas por partido",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_deep_completions)",
+      "unit": "completions/partido",
+      "source": "team_match_deep_completions",
+      "interpretation": "Pases/centros completados cerca del arco rival — mide penetración real, no solo posesión."
+    },
+    {
+      "id": "deepProgressionsPerMatch",
+      "name": "Progresiones profundas por partido",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_deep_progressions)",
+      "unit": "progresiones/partido",
+      "source": "team_match_deep_progressions"
+    },
+    {
+      "id": "deepCompletionsConcededPerMatch",
+      "name": "Completions profundas concedidas",
+      "fase": "defensiva",
+      "formula": "avg(team_match_deep_completions_conceded)",
+      "unit": "completions/partido",
+      "source": "team_match_deep_completions_conceded",
+      "invert": true
+    },
+    {
+      "id": "deepProgressionsConcededPerMatch",
+      "name": "Progresiones profundas concedidas",
+      "fase": "defensiva",
+      "formula": "avg(team_match_deep_progressions_conceded)",
+      "unit": "progresiones/partido",
+      "source": "team_match_deep_progressions_conceded",
+      "invert": true
+    },
+    {
+      "id": "obvPerMatch",
+      "name": "OBV total por partido",
+      "fase": "identidad",
+      "formula": "avg(team_match_obv)",
+      "unit": "OBV/partido",
+      "source": "team_match_obv",
+      "interpretation": "On-Ball Value: valor agregado de todas las acciones con balón del equipo."
+    },
+    {
+      "id": "dribbleRatio",
+      "name": "Efectividad de regate (%)",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_dribble_ratio)",
+      "unit": "%",
+      "source": "team_match_dribble_ratio"
+    },
+    {
+      "id": "crossBoxRatio",
+      "name": "Efectividad de centros al área (%)",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_successful_box_cross_ratio)",
+      "unit": "%",
+      "source": "team_match_successful_box_cross_ratio"
+    },
+    {
+      "id": "obvPassPerMatch",
+      "name": "OBV de pase por partido",
+      "fase": "ofensiva",
+      "formula": "avg(team_match_obv_pass)",
+      "unit": "OBV/partido",
+      "source": "team_match_obv_pass",
+      "interpretation": "Valor generado específicamente por la circulación de pases (no incluye tiros, regates ni acciones defensivas)."
+    },
+    {
+      "id": "ppda",
+      "name": "PPDA (intensidad de presión)",
+      "fase": "defensiva",
+      "formula": "avg(team_match_ppda)",
+      "unit": "pases/acción defensiva",
+      "source": "team_match_ppda",
+      "interpretation": "Menor valor = presión más intensa sobre la salida rival.",
+      "invert": true
+    },
+    {
+      "id": "pressuresPerMatch",
+      "name": "Presiones por partido",
+      "fase": "defensiva",
+      "formula": "avg(team_match_pressures)",
+      "unit": "presiones/partido",
+      "source": "team_match_pressures"
+    },
+    {
+      "id": "fhalfPressuresRatio",
+      "name": "Presión en campo rival (%)",
+      "fase": "defensiva",
+      "formula": "avg(team_match_fhalf_pressures_ratio)",
+      "unit": "%",
+      "source": "team_match_fhalf_pressures_ratio",
+      "interpretation": "Qué % de la presión total se ejerce en la mitad de cancha rival — proxy de altura del bloque."
+    },
+    {
+      "id": "defensiveDistance",
+      "name": "Distancia defensiva media",
+      "fase": "defensiva",
+      "formula": "avg(team_match_defensive_distance)",
+      "unit": "metros desde el arco propio",
+      "source": "team_match_defensive_distance",
+      "interpretation": "Altura media a la que el equipo realiza acciones defensivas."
+    },
+    {
+      "id": "obvDefensiveActionPerMatch",
+      "name": "OBV de acciones defensivas por partido",
+      "fase": "defensiva",
+      "formula": "avg(team_match_obv_defensive_action)",
+      "unit": "OBV/partido",
+      "source": "team_match_obv_defensive_action",
+      "interpretation": "Valor generado específicamente por recuperaciones, entradas e intercepciones."
+    },
+    {
+      "id": "aggression",
+      "name": "Agresividad defensiva",
+      "fase": "defensiva",
+      "formula": "avg(team_match_aggression)",
+      "unit": "índice (mayor = más agresivo)",
+      "source": "team_match_aggression",
+      "interpretation": "Frecuencia de duelos/entradas iniciadas — proxy de intensidad física en la disputa."
+    },
+    {
+      "id": "counterAttackingShotsPerMatch",
+      "name": "Remates de contraataque por partido",
+      "fase": "transiciones",
+      "formula": "avg(team_match_counter_attacking_shots)",
+      "unit": "remates/partido",
+      "source": "team_match_counter_attacking_shots",
+      "interpretation": "Volumen de amenaza generado en transición ofensiva."
+    },
+    {
+      "id": "counterAttackingShotsConcededPerMatch",
+      "name": "Remates de contraataque concedidos",
+      "fase": "transiciones",
+      "formula": "avg(team_match_counter_attacking_shots_conceded)",
+      "unit": "remates/partido",
+      "source": "team_match_counter_attacking_shots_conceded",
+      "invert": true,
+      "interpretation": "Vulnerabilidad a la transición defensiva propia."
+    },
+    {
+      "id": "shotsInClearPerMatch",
+      "name": "Remates sin marca por partido",
+      "fase": "transiciones",
+      "formula": "avg(team_match_shots_in_clear)",
+      "unit": "remates/partido",
+      "source": "team_match_shots_in_clear"
+    },
+    {
+      "id": "shotsInClearConcededPerMatch",
+      "name": "Remates sin marca concedidos",
+      "fase": "defensiva",
+      "formula": "avg(team_match_shots_in_clear_conceded)",
+      "unit": "remates/partido",
+      "source": "team_match_shots_in_clear_conceded",
+      "invert": true,
+      "interpretation": "Remates concedidos sin presión — síntoma de desorden defensivo, no solo de mala suerte."
+    },
+    {
+      "id": "spGoalsPerMatch",
+      "name": "Goles de balón parado por partido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_sp_goals)",
+      "unit": "goles/partido",
+      "source": "team_match_sp_goals"
+    },
+    {
+      "id": "spGoalsConcededPerMatch",
+      "name": "Goles de balón parado concedidos",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_sp_goals_conceded)",
+      "unit": "goles/partido",
+      "source": "team_match_sp_goals_conceded",
+      "invert": true
+    },
+    {
+      "id": "cornerXgPerMatch",
+      "name": "xG de córner por partido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_corner_xg)",
+      "unit": "xG/partido",
+      "source": "team_match_corner_xg"
+    },
+    {
+      "id": "cornerXgConcededPerMatch",
+      "name": "xG de córner concedido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_corner_xg_conceded)",
+      "unit": "xG/partido",
+      "source": "team_match_corner_xg_conceded",
+      "invert": true
+    },
+    {
+      "id": "cornersPerMatch",
+      "name": "Córners a favor por partido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_corners)",
+      "unit": "córners/partido",
+      "source": "team_match_corners"
+    },
+    {
+      "id": "cornersConcededPerMatch",
+      "name": "Córners en contra por partido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_corners_conceded)",
+      "unit": "córners/partido",
+      "source": "team_match_corners_conceded",
+      "invert": true
+    },
+    {
+      "id": "freeKickXgPerMatch",
+      "name": "xG de tiro libre por partido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_free_kick_xg)",
+      "unit": "xG/partido",
+      "source": "team_match_free_kick_xg"
+    },
+    {
+      "id": "freeKickXgConcededPerMatch",
+      "name": "xG de tiro libre concedido",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_free_kick_xg_conceded)",
+      "unit": "xG/partido",
+      "source": "team_match_free_kick_xg_conceded",
+      "invert": true
+    },
+    {
+      "id": "aerialTeamRating",
+      "name": "Rating aéreo del equipo",
+      "fase": "balon_parado",
+      "formula": "avg(team_match_aerial_team_rating)",
+      "unit": "rating (modelo HOPS, 0-1)",
+      "source": "team_match_aerial_team_rating",
+      "interpretation": "Calidad relativa del equipo en duelos aéreos — clave para defensa/ataque de centros."
+    },
+    {
+      "id": "yellowCardsPerMatch",
+      "name": "Tarjetas amarillas por partido",
+      "fase": "disciplina",
+      "formula": "avg(team_match_yellow_cards)",
+      "unit": "tarjetas/partido",
+      "source": "team_match_yellow_cards",
+      "invert": true
+    },
+    {
+      "id": "redCardsPerMatch",
+      "name": "Tarjetas rojas por partido",
+      "fase": "disciplina",
+      "formula": "avg(team_match_red_cards)",
+      "unit": "tarjetas/partido",
+      "source": "team_match_red_cards",
+      "invert": true
+    }
+  ],
+  "pendientes": [
+    "Métricas por jugador más allá de goles/asistencias/pierna hábil (ya cubiertas con Player Season Stats v6) requieren Player Match Stats v7, no leído aún.",
+    "Mapas de tiros/redes de pase se derivan evento por evento de Events v10 en src/lib/statsbomb/events-analytics.ts, no como campo directo de Team Match Stats.",
+    "Comparación contra el promedio de liga y percentil requieren un baseline agregado de los 16 equipos de la competencia (ver statsbomb/config/league_baseline.json y scripts/compute-statsbomb-league-baseline.mjs)."
+  ]
+}

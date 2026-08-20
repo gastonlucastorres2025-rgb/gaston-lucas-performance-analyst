@@ -41,9 +41,13 @@ const styles = StyleSheet.create({
   quadrantHeader: { backgroundColor: COLORS.blue, paddingVertical: 6, paddingHorizontal: 10 },
   quadrantHeaderTitle: { fontSize: 10, fontWeight: 700, color: "#ffffff" },
   quadrantBody: { padding: 10, minHeight: 40 },
+  quadrantMetaRow: { flexDirection: "row", gap: 10, marginBottom: 6 },
+  quadrantMetaText: { fontSize: 8.5, color: COLORS.muted },
   quadrantText: { fontSize: 9.5, lineHeight: 1.5, color: COLORS.ink },
   quadrantImage: { maxWidth: "100%", maxHeight: 200, marginTop: 8, objectFit: "contain" },
-  emptyText: { fontSize: 9, color: "#999", fontStyle: "italic" },
+  // Sin "fontStyle: italic": la fuente Inter registrada no tiene variante itálica (no hay
+  // Inter-Italic.ttf en public/fonts), y @react-pdf revienta en runtime si no puede resolverla.
+  emptyText: { fontSize: 9, color: "#999" },
 
   section: { marginBottom: 14 },
   sectionCard: { borderRadius: 6, border: `1 solid ${COLORS.border}`, overflow: "hidden" },
@@ -87,8 +91,14 @@ export type SesionPdfData = {
   fecha: string;
   lugar: string;
   activacion: string;
+  activacionEnfoque: string;
+  activacionEspacio: string;
   introductorio: string;
+  introductorioEnfoque: string;
+  introductorioEspacio: string;
   principal: string;
+  principalEnfoque: string;
+  principalEspacio: string;
   objetivos_tarea: string;
   objetivos_fisicos: string;
   activacionImagenUrl: string | null;
@@ -101,23 +111,42 @@ export type SesionPdfData = {
   crestUrl: string;
 };
 
+function espacioTexto(espacio: string) {
+  return espacio ? espacio[0].toUpperCase() + espacio.slice(1) : "—";
+}
+
 function Quadrant({
   title,
   body,
   imageUrl,
   full,
+  enfoque,
+  espacio,
 }: {
   title: string;
   body: string;
   imageUrl?: string | null;
   full?: boolean;
+  enfoque?: string;
+  espacio?: string;
 }) {
+  const tieneEnfoqueEspacio = enfoque !== undefined && espacio !== undefined;
   return (
     <View style={[styles.quadrant, full ? styles.quadrantFull : {}]} wrap={false}>
       <View style={styles.quadrantHeader}>
         <Text style={styles.quadrantHeaderTitle}>{title}</Text>
       </View>
       <View style={styles.quadrantBody}>
+        {tieneEnfoqueEspacio && (
+          <View style={styles.quadrantMetaRow}>
+            <Text style={styles.quadrantMetaText}>
+              Enfoque: <Text style={{ fontWeight: 700 }}>{enfoque || "—"}</Text>
+            </Text>
+            <Text style={styles.quadrantMetaText}>
+              Espacio: <Text style={{ fontWeight: 700 }}>{espacioTexto(espacio)}</Text>
+            </Text>
+          </View>
+        )}
         {body ? <Text style={styles.quadrantText}>{body}</Text> : <Text style={styles.emptyText}>Sin definir</Text>}
         {imageUrl && (
           // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
@@ -153,9 +182,27 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
         </View>
 
         <View style={styles.quadrantGrid}>
-          <Quadrant title="Activación" body={data.activacion} imageUrl={data.activacionImagenUrl} />
-          <Quadrant title="Introductorio" body={data.introductorio} imageUrl={data.introductorioImagenUrl} />
-          <Quadrant title="Principal" body={data.principal} imageUrl={data.principalImagenUrl} />
+          <Quadrant
+            title="Activación"
+            body={data.activacion}
+            imageUrl={data.activacionImagenUrl}
+            enfoque={data.activacionEnfoque}
+            espacio={data.activacionEspacio}
+          />
+          <Quadrant
+            title="Introductorio"
+            body={data.introductorio}
+            imageUrl={data.introductorioImagenUrl}
+            enfoque={data.introductorioEnfoque}
+            espacio={data.introductorioEspacio}
+          />
+          <Quadrant
+            title="Principal"
+            body={data.principal}
+            imageUrl={data.principalImagenUrl}
+            enfoque={data.principalEnfoque}
+            espacio={data.principalEspacio}
+          />
           <Quadrant title="Objetivos de la tarea" body={data.objetivos_tarea} />
           <Quadrant title="Objetivos físicos" body={data.objetivos_fisicos} full />
         </View>
@@ -181,8 +228,8 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
                 </View>
               </View>
               <View style={styles.playerList}>
-                {data.habilitados.map((n) => (
-                  <Text key={n} style={styles.playerChip}>
+                {data.habilitados.map((n, i) => (
+                  <Text key={i} style={styles.playerChip}>
                     {n}
                   </Text>
                 ))}
@@ -199,14 +246,14 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
               </View>
               <View style={[styles.sectionBody, { backgroundColor: COLORS.greenTint }]}>
                 <View style={styles.equiposRow}>
-                  {data.equipos.map((eq) => (
-                    <View key={eq.nombre} style={styles.equipoCol}>
+                  {data.equipos.map((eq, i) => (
+                    <View key={i} style={styles.equipoCol}>
                       <Text style={styles.equipoNombre}>{eq.nombre}</Text>
                       {eq.jugadores.length === 0 ? (
                         <Text style={styles.emptyText}>Sin jugadores</Text>
                       ) : (
-                        eq.jugadores.map((n) => (
-                          <Text key={n} style={styles.equipoPlayer}>
+                        eq.jugadores.map((n, j) => (
+                          <Text key={j} style={styles.equipoPlayer}>
                             {n}
                           </Text>
                         ))

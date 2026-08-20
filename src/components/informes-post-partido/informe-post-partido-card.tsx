@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { EVALUACION_LABEL, type Evaluacion } from "@/lib/informes-post-partido-types";
+import { contarProgreso, type RespuestasFase } from "@/lib/informes-post-partido-types";
 
 type Fila = {
   id: string;
   rival: string;
   fecha: string | null;
   resultado: string;
-  plan_funciono: Evaluacion;
+  fases: Record<string, RespuestasFase> | null;
 };
 
 export function InformePostPartidoCard({ fila }: { fila: Fila }) {
+  const { respondidas, total } = contarProgreso(fila.fases);
+
   return (
     <Link
       href={`/informes-post-partido/${fila.id}`}
@@ -19,9 +21,9 @@ export function InformePostPartidoCard({ fila }: { fila: Fila }) {
       <p className="truncate text-xs text-foreground/50">
         {[fila.fecha, fila.resultado].filter(Boolean).join(" · ") || "Sin datos"}
       </p>
-      {fila.plan_funciono && (
+      {total > 0 && (
         <span className="mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-          Plan: {EVALUACION_LABEL[fila.plan_funciono]}
+          {respondidas}/{total} preguntas respondidas
         </span>
       )}
     </Link>

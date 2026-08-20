@@ -115,6 +115,13 @@ export function NuevoPartidoForm({
                 Logo de &quot;{competencia}&quot; (opcional, se reutiliza en los próximos partidos con este nombre)
               </span>
               <input
+                // key=competencia: si el usuario cambia el nombre de la competencia (ej. después de
+                // corregir un typo o de un error de validación que no cerró el formulario), el input
+                // de archivo se remonta y pierde cualquier logo que hubiera quedado seleccionado de un
+                // intento anterior — si no, un logo elegido para "Torneo Apertura" podía reenviarse por
+                // error bajo un nombre de competencia distinto (bug real encontrado: "Torneo Intermedio"
+                // y "Torneo Intermdio" quedaron con el logo de Apertura).
+                key={competencia}
                 type="file"
                 name="competencia_logo"
                 accept="image/*"

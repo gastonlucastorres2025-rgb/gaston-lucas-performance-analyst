@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type Evaluacion, type InformePostPartidoData } from "@/lib/informes-post-partido-types";
+import {
+  FASES_INFORME,
+  type Evaluacion,
+  type FaseInforme,
+  type InformePostPartidoData,
+  type RespuestasFase,
+} from "@/lib/informes-post-partido-types";
 import { guardarInformePostPartido, eliminarInformePostPartido } from "@/lib/informes-post-partido-actions";
 
 const inputClase = "rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none";
@@ -18,15 +24,56 @@ function SelectorEvaluacion({
   onChange: (v: Evaluacion) => void;
 }) {
   return (
-    <label className="flex flex-col gap-1">
-      <span className={labelClase}>{label}</span>
-      <select className={inputClase} value={value} onChange={(e) => onChange(e.target.value as Evaluacion)}>
+    <label className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+      <span className="text-sm text-foreground/80">{label}</span>
+      <select
+        className={`${inputClase} sm:w-40`}
+        value={value}
+        onChange={(e) => onChange(e.target.value as Evaluacion)}
+      >
         <option value="">Sin definir</option>
         <option value="si">Sí</option>
         <option value="parcial">Parcialmente</option>
         <option value="no">No</option>
       </select>
     </label>
+  );
+}
+
+function FaseCard({
+  fase,
+  valor,
+  onCambiar,
+}: {
+  fase: FaseInforme;
+  valor: RespuestasFase;
+  onCambiar: (next: RespuestasFase) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-surface p-6">
+      <h2 className="mb-4 text-sm font-semibold text-primary">{fase.label}</h2>
+      <div className="flex flex-col gap-3">
+        {fase.preguntas.map((pregunta) => (
+          <SelectorEvaluacion
+            key={pregunta.key}
+            label={pregunta.texto}
+            value={valor.respuestas[pregunta.key] ?? ""}
+            onChange={(v) =>
+              onCambiar({ ...valor, respuestas: { ...valor.respuestas, [pregunta.key]: v } })
+            }
+          />
+        ))}
+      </div>
+      <label className="mt-4 flex flex-col gap-1">
+        <span className={labelClase}>Comentario</span>
+        <textarea
+          className={`${inputClase} min-h-[80px] resize-y`}
+          placeholder={`Notas sobre ${fase.label.toLowerCase()}.`}
+          value={valor.comentario}
+          onChange={(e) => onCambiar({ ...valor, comentario: e.target.value })}
+        />
+      </label>
+    </div>
   );
 }
 
@@ -49,6 +96,10 @@ export function InformePostPartidoEditor({ id, informeInicial }: { id: string; i
       await guardarInformePostPartido(id, next);
       setEstadoGuardado("guardado");
     }, 700);
+  }
+
+  function actualizarFase(faseKey: string, next: RespuestasFase) {
+    actualizar({ ...informe, fases: { ...informe.fases, [faseKey]: next } });
   }
 
   async function eliminar() {
@@ -121,49 +172,22 @@ export function InformePostPartidoEditor({ id, informeInicial }: { id: string; i
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface p-6">
-        <h2 className="mb-3 text-sm font-semibold text-primary">¿Salió el plan?</h2>
-        <SelectorEvaluacion
-          label="Evaluación"
-          value={informe.plan_funciono}
-          onChange={(v) => actualizar({ ...informe, plan_funciono: v })}
+      {FASES_INFORME.map((fase) => (
+        <FaseCard
+          key={fase.key}
+          fase={fase}
+          valor={informe.fases[fase.key] ?? { respuestas: {}, comentario: "" }}
+          onCambiar={(next) => actualizarFase(fase.key, next)}
         />
-        <label className="mt-3 flex flex-col gap-1">
-          <span className={labelClase}>Comentario</span>
-          <textarea
-            className={`${inputClase} min-h-[90px] resize-y`}
-            placeholder="¿Se pudo llevar adelante lo planificado? ¿Qué funcionó y qué no?"
-            value={informe.plan_comentario}
-            onChange={(e) => actualizar({ ...informe, plan_comentario: e.target.value })}
-          />
-        </label>
-      </div>
+      ))}
 
       <div className="rounded-xl border border-border bg-surface p-6">
-        <h2 className="mb-3 text-sm font-semibold text-primary">¿El análisis previo fue acertado?</h2>
-        <SelectorEvaluacion
-          label="Evaluación"
-          value={informe.analisis_acertado}
-          onChange={(v) => actualizar({ ...informe, analisis_acertado: v })}
-        />
-        <label className="mt-3 flex flex-col gap-1">
-          <span className={labelClase}>Comentario</span>
-          <textarea
-            className={`${inputClase} min-h-[90px] resize-y`}
-            placeholder="¿El rival se comportó como esperábamos en el Plan de Partido? ¿Qué patrón se confirmó o no?"
-            value={informe.analisis_comentario}
-            onChange={(e) => actualizar({ ...informe, analisis_comentario: e.target.value })}
-          />
-        </label>
-      </div>
-
-      <div className="rounded-xl border border-border bg-surface p-6">
-        <h2 className="mb-3 text-sm font-semibold text-primary">Conclusiones generales</h2>
+        <h2 className="mb-3 text-sm font-semibold text-primary">Otras observaciones</h2>
         <textarea
           className={`${inputClase} min-h-[120px] resize-y`}
-          placeholder="Balance general del partido, para tener en cuenta de cara al próximo cruce con este rival."
-          value={informe.conclusiones_generales}
-          onChange={(e) => actualizar({ ...informe, conclusiones_generales: e.target.value })}
+          placeholder="Cualquier otro aspecto de contexto del partido que no entre en las fases de arriba."
+          value={informe.otras_observaciones}
+          onChange={(e) => actualizar({ ...informe, otras_observaciones: e.target.value })}
         />
       </div>
     </div>

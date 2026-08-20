@@ -70,3 +70,19 @@ export async function fetchSheetValues(
   const data = (await res.json()) as { values?: string[][] };
   return data.values ?? [];
 }
+
+export async function fetchSheetTabNames(spreadsheetId: string): Promise<string[]> {
+  const accessToken = await getGoogleAccessToken("https://www.googleapis.com/auth/spreadsheets.readonly");
+
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`No se pudo leer las pestañas de la planilla: ${res.status} ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as { sheets?: { properties: { title: string } }[] };
+  return (data.sheets ?? []).map((s) => s.properties.title);
+}

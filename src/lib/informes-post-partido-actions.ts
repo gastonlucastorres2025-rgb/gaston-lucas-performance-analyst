@@ -30,11 +30,8 @@ export async function crearInformePostPartido(): Promise<void> {
       fecha: vacio.fecha,
       resultado: vacio.resultado,
       competencia: vacio.competencia,
-      plan_funciono: vacio.plan_funciono,
-      plan_comentario: vacio.plan_comentario,
-      analisis_acertado: vacio.analisis_acertado,
-      analisis_comentario: vacio.analisis_comentario,
-      conclusiones_generales: vacio.conclusiones_generales,
+      fases: vacio.fases,
+      otras_observaciones: vacio.otras_observaciones,
     })
     .select("id")
     .single();
@@ -59,11 +56,8 @@ export async function guardarInformePostPartido(id: string, informe: InformePost
       fecha: informe.fecha,
       resultado: informe.resultado,
       competencia: informe.competencia,
-      plan_funciono: informe.plan_funciono,
-      plan_comentario: informe.plan_comentario,
-      analisis_acertado: informe.analisis_acertado,
-      analisis_comentario: informe.analisis_comentario,
-      conclusiones_generales: informe.conclusiones_generales,
+      fases: informe.fases,
+      otras_observaciones: informe.otras_observaciones,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

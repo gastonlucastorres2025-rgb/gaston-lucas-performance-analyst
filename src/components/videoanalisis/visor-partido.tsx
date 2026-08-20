@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { AgregarAPlaylistBoton } from "@/components/videoanalisis/agregar-a-playlist-boton";
 import { YoutubePlayer, type YoutubePlayerHandle } from "@/components/videoanalisis/youtube-player";
 
 type Categoria = { codigo: string; color_hex: string | null };
@@ -176,23 +177,25 @@ export function VisorPartido({
           ) : (
             <div className="divide-y divide-border">
               {accionesFiltradas.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => irAAccion(a)}
-                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-primary/5"
-                >
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: colorPorCodigo.get(a.codigo) ?? "#5f5e5a" }}
-                  />
-                  <span className="w-12 shrink-0 font-mono text-xs text-foreground/50">
-                    {formatMinuto(a.inicio_seg)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{a.codigo}</span>
-                  <span className="shrink-0 text-xs text-foreground/40">
-                    {Math.round(a.fin_seg - a.inicio_seg)}s
-                  </span>
-                </button>
+                <div key={a.id} className="flex items-center gap-1 px-1">
+                  <button
+                    onClick={() => irAAccion(a)}
+                    className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left text-sm transition-colors hover:bg-primary/5"
+                  >
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: colorPorCodigo.get(a.codigo) ?? "#5f5e5a" }}
+                    />
+                    <span className="w-12 shrink-0 font-mono text-xs text-foreground/50">
+                      {formatMinuto(a.inicio_seg)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{a.codigo}</span>
+                    <span className="shrink-0 text-xs text-foreground/40">
+                      {Math.round(a.fin_seg - a.inicio_seg)}s
+                    </span>
+                  </button>
+                  <AgregarAPlaylistBoton accionId={a.id} />
+                </div>
               ))}
             </div>
           )}

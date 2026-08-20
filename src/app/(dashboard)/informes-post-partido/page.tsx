@@ -9,7 +9,7 @@ export default async function InformesPostPartidoPage() {
   const supabase = await createClient();
   const { data: informes } = await supabase
     .from("informes_post_partido")
-    .select("id, rival, fecha, resultado, plan_funciono")
+    .select("id, rival, fecha, resultado, fases")
     .order("updated_at", { ascending: false });
 
   return (
@@ -17,7 +17,7 @@ export default async function InformesPostPartidoPage() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <PageHeader
           title="Informe Post Partido"
-          description="Después de jugar: si salió el plan, si el análisis fue acertado, y conclusiones generales."
+          description="Después de jugar: cuestionario por fases (presión, ofensiva, defensiva, transiciones, balón parado) y observaciones generales."
         />
         <form action={crearInformePostPartido}>
           <button

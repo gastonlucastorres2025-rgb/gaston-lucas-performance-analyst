@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { VisorPartido } from "@/components/videoanalisis/visor-partido";
 import { PlacaPartido } from "@/components/videoanalisis/placa-partido";
 import { equiposPlaca } from "@/lib/videoanalisis/placa-helpers";
+import { resolverLogoCompetencia } from "@/lib/videoanalisis/competencia-logo";
 import { parseDateKey } from "@/lib/calendar-utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,15 +24,9 @@ export default async function PartidoVADetallePage({ params }: { params: Promise
 
   if (!partido) notFound();
 
-  let logoCompetencia: string | null = null;
-  if (partido.competencia) {
-    const { data: logo } = await supabase
-      .from("va_competencia_logos")
-      .select("logo_url")
-      .eq("nombre", partido.competencia)
-      .maybeSingle();
-    logoCompetencia = logo?.logo_url ?? null;
-  }
+  const { data: logos } = await supabase.from("va_competencia_logos").select("nombre, logo_url");
+  const logosPorCompetencia = new Map((logos ?? []).map((l) => [l.nombre, l.logo_url]));
+  const logoCompetencia = resolverLogoCompetencia(partido.competencia, logosPorCompetencia);
 
   const fechaTexto = parseDateKey(partido.fecha).toLocaleDateString("es-UY", {
     weekday: "long",

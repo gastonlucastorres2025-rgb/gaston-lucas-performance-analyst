@@ -17,11 +17,7 @@ export const COLORS = {
   border: "#e2e5ea",
 };
 
-let registered = false;
-
 export function registerPdfFonts() {
-  if (registered) return;
-  registered = true;
   const base = typeof window !== "undefined" ? window.location.origin : "";
   Font.register({
     family: "Inter",

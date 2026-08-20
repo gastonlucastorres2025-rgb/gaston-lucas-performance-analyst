@@ -8,6 +8,25 @@ export function extraerFolderIdDeUrl(url: string): string | null {
   return match ? match[1] : null;
 }
 
+export function extraerFileIdDeUrl(url: string): string | null {
+  const porPath = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (porPath) return porPath[1];
+  const porQuery = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return porQuery ? porQuery[1] : null;
+}
+
+export async function descargarArchivoDrive(fileId: string): Promise<ArrayBuffer> {
+  const accessToken = await getGoogleAccessToken(DRIVE_SCOPE);
+  const res = await fetch(`${API_BASE}/${fileId}?alt=media&supportsAllDrives=true`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`No se pudo descargar el archivo de Drive: ${res.status} ${await res.text()}`);
+  }
+  return res.arrayBuffer();
+}
+
 async function driveFetch(path: string, params: Record<string, string>): Promise<unknown> {
   const accessToken = await getGoogleAccessToken(DRIVE_SCOPE);
   const search = new URLSearchParams(params);
