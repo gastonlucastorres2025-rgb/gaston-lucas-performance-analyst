@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { comoCookieDeSesion } from "@/lib/supabase/session-cookie";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -15,7 +16,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, comoCookieDeSesion(options)),
             );
           } catch {
             // Called from a Server Component without a surrounding Server Action

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { comoCookieDeSesion } from "@/lib/supabase/session-cookie";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -20,7 +21,7 @@ export async function proxy(request: NextRequest) {
           );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, comoCookieDeSesion(options)),
           );
         },
       },
