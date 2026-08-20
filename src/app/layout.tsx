@@ -10,6 +10,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Nacional · Cuerpo Técnico",
   description: "Plataforma de gestión para el cuerpo técnico de Nacional",
+  // Segunda capa además de robots.ts: algunos rastreadores ignoran robots.txt pero respetan esta
+  // etiqueta directo en cada página. Plataforma privada, nunca debe indexarse.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({
