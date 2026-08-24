@@ -22,7 +22,6 @@ const NAV_ITEMS = [
   { href: "/informes-post-partido", label: "Informe Post Partido" },
   { href: "/scouting", label: "Scouting" },
   { href: "/seguimiento-internacional", label: "Seguimiento Internacional" },
-  { href: "/videos", label: "Videos" },
   { href: "/tareas", label: "Tareas" },
   { href: "/configuracion/equipo", label: "Configuración" },
 ];
