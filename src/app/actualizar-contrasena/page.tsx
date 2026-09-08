@@ -25,33 +25,33 @@ export default function ActualizarContrasenaPage() {
 
   useEffect(() => {
     // El link de recuperación llega de dos formas posibles: con un "code" en la URL (flujo PKCE,
-    // hay que canjearlo a mano) o con los tokens en el hash (#access_token=...&type=recovery,
-    // flujo clásico) — ese segundo caso lo procesa solo el cliente de Supabase al inicializarse,
-    // pero de forma asincrónica, así que además de chequear la sesión una vez de entrada, se
-    // escucha el evento por si todavía no había terminado de procesarlo en ese primer chequeo.
-    const codigo = new URLSearchParams(window.location.search).get("code");
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_evento, session) => {
-      if (session) setEstado("listo");
-    });
-
+    // se canjea con exchangeCodeForSession) o con los tokens ya listos en el hash
+    // (#access_token=...&refresh_token=...&type=recovery, flujo clásico que usa el link generado
+    // por un admin vía la API). Este cliente está configurado para cookies/PKCE (createBrowserClient
+    // de @supabase/ssr) y NO procesa automáticamente el hash del flujo clásico (detectSessionInUrl
+    // no hace nada ahí) — verificado con un link real: sin este parseo manual, la sesión nunca se
+    // establecía y siempre terminaba en "link inválido" aunque el link fuera válido. Por eso se
+    // leen los tokens del hash a mano y se arma la sesión con setSession.
     (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const codigo = params.get("code");
       if (codigo) {
         await supabase.auth.exchangeCodeForSession(codigo);
-      }
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setEstado("listo");
       } else {
-        // Le da un margen al hash-based flow (se procesa async al inicializar el cliente) antes
-        // de rendirse y mostrar "link inválido" — si en ese margen llega el evento de arriba, gana ese.
-        setTimeout(() => setEstado((actual) => (actual === "cargando" ? "sin-sesion" : actual)), 1500);
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const accessToken = hash.get("access_token");
+        const refreshToken = hash.get("refresh_token");
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        }
       }
-    })();
+      // Saca los tokens de la URL una vez procesados — no deben quedar visibles/copiables en la
+      // barra de direcciones ni en el historial del navegador.
+      window.history.replaceState(null, "", window.location.pathname);
 
-    return () => subscription.unsubscribe();
+      const { data } = await supabase.auth.getSession();
+      setEstado(data.session ? "listo" : "sin-sesion");
+    })();
   }, [supabase]);
 
   async function handleSubmit(e: React.FormEvent) {
