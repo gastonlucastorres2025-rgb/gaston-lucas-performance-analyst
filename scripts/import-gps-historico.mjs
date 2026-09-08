@@ -191,11 +191,27 @@ async function main() {
       }
       await asegurarAlias(nombreCrudo, jugador.id);
 
-      const filaSesion = filasJugador.find((f) => String(f["Drill Title"] ?? "").trim().toLowerCase() === "sesion") ?? filasJugador[0];
       const num = (v) => (typeof v === "number" ? v : v ? Number(v) : null);
 
-      const duracionMin = num(filaSesion["Total Time"]);
-      const distanciaTotal = num(filaSesion["Total Distance"]);
+      // No todos los archivos traen una fila "Sesion" (el resumen del día armado por el
+      // proveedor) — los días de partido, por ejemplo, solo traen "Primer Tiempo" y "Segundo
+      // Tiempo" sueltos. Si existe "Sesion", es la más confiable (la arma el proveedor, puede
+      // incluir tiempos de transición entre drills que no están en ningún drill individual). Si
+      // no existe, el total real del día es la SUMA de todos los drills reales — nunca solo el
+      // primero que aparezca en el archivo (ese fue el bug: partidos sin fila "Sesion" quedaban
+      // con solo el primer tiempo cargado y el segundo tiempo entero se perdía).
+      const filaSesion = filasJugador.find((f) => String(f["Drill Title"] ?? "").trim().toLowerCase() === "sesion");
+      const suma = (campo) => {
+        const vals = filasJugador.map((f) => num(f[campo])).filter((v) => v !== null);
+        return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) * 100) / 100 : null;
+      };
+      const max = (campo) => {
+        const vals = filasJugador.map((f) => num(f[campo])).filter((v) => v !== null);
+        return vals.length > 0 ? Math.round(Math.max(...vals) * 100) / 100 : null;
+      };
+
+      const duracionMin = filaSesion ? num(filaSesion["Total Time"]) : suma("Total Time");
+      const distanciaTotal = filaSesion ? num(filaSesion["Total Distance"]) : suma("Total Distance");
 
       const registro = {
         gps_sesion_id: gpsSesionId,
@@ -205,15 +221,15 @@ async function main() {
         duracion_min: duracionMin,
         distancia_total_m: distanciaTotal,
         distancia_por_min: duracionMin && distanciaTotal ? Math.round((distanciaTotal / duracionMin) * 100) / 100 : null,
-        velocidad_maxima_kmh: num(filaSesion["Max Speed"]),
-        dist_alta_velocidad_m: num(filaSesion["High Speed Running (Absolute)"]),
-        dist_muy_alta_velocidad_m: num(filaSesion["Distance Zone 6 (Absolute)"]),
-        aceleraciones_cant: num(filaSesion["Accelerations (Absolute)"]),
-        desaceleraciones_cant: num(filaSesion["Decelerations (Absolute)"]),
+        velocidad_maxima_kmh: filaSesion ? num(filaSesion["Max Speed"]) : max("Max Speed"),
+        dist_alta_velocidad_m: filaSesion ? num(filaSesion["High Speed Running (Absolute)"]) : suma("High Speed Running (Absolute)"),
+        dist_muy_alta_velocidad_m: filaSesion ? num(filaSesion["Distance Zone 6 (Absolute)"]) : suma("Distance Zone 6 (Absolute)"),
+        aceleraciones_cant: filaSesion ? num(filaSesion["Accelerations (Absolute)"]) : suma("Accelerations (Absolute)"),
+        desaceleraciones_cant: filaSesion ? num(filaSesion["Decelerations (Absolute)"]) : suma("Decelerations (Absolute)"),
         metricas_extra: {
-          entradas_zona6: num(filaSesion["Entries Zone 6 (Absolute)"]),
-          hml_esfuerzos: num(filaSesion["HML Efforts"]),
-          hml_distancia_m: num(filaSesion["HML Distance"]),
+          entradas_zona6: filaSesion ? num(filaSesion["Entries Zone 6 (Absolute)"]) : suma("Entries Zone 6 (Absolute)"),
+          hml_esfuerzos: filaSesion ? num(filaSesion["HML Efforts"]) : suma("HML Efforts"),
+          hml_distancia_m: filaSesion ? num(filaSesion["HML Distance"]) : suma("HML Distance"),
           drills: filasJugador.map((f) => ({
             nombre: String(f["Drill Title"] ?? "").trim(),
             tiempo_min: num(f["Total Time"]),

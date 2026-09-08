@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [modo, setModo] = useState<"login" | "recuperar">("login");
+  const [recuperarEnviado, setRecuperarEnviado] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,12 +36,24 @@ export default function LoginPage() {
     router.refresh();
   }
 
+  async function handleRecuperar(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/actualizar-contrasena`,
+    });
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setRecuperarEnviado(true);
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-surface p-8 shadow-sm"
-      >
+      <div className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-surface p-8 shadow-sm">
         <Image
           src="/escudo-nacional.png"
           alt="Escudo de Nacional"
@@ -54,31 +68,93 @@ export default function LoginPage() {
         <p className="-mt-2 text-center text-xs text-foreground/60">
           Gastón Lucas Torres
         </p>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
-        />
-        {error && <p className="text-sm text-accent">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
-        >
-          {loading ? "Ingresando..." : "Ingresar"}
-        </button>
-      </form>
+
+        {modo === "login" ? (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+            {error && <p className="text-sm text-accent">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
+            >
+              {loading ? "Ingresando..." : "Ingresar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModo("recuperar");
+                setError(null);
+                setRecuperarEnviado(false);
+              }}
+              className="text-center text-xs text-foreground/50 hover:text-primary hover:underline"
+            >
+              ¿Olvidé mi contraseña?
+            </button>
+          </form>
+        ) : recuperarEnviado ? (
+          <>
+            <p className="text-center text-sm text-foreground/70">
+              Si <span className="font-medium">{email}</span> tiene una cuenta, te llegó un mail con un link para definir una
+              contraseña nueva.
+            </p>
+            <button
+              type="button"
+              onClick={() => setModo("login")}
+              className="text-center text-sm text-primary hover:underline"
+            >
+              Volver al login
+            </button>
+          </>
+        ) : (
+          <form onSubmit={handleRecuperar} className="flex flex-col gap-3">
+            <p className="-mt-1 text-center text-xs text-foreground/60">
+              Ingresá tu email y te mandamos un link para definir una contraseña nueva.
+            </p>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="rounded border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            />
+            {error && <p className="text-sm text-accent">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
+            >
+              {loading ? "Enviando..." : "Mandar link"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModo("login");
+                setError(null);
+              }}
+              className="text-center text-xs text-foreground/50 hover:text-primary hover:underline"
+            >
+              Volver al login
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

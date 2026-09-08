@@ -15,6 +15,12 @@ export const COLORS = {
   ink: "#1a1a1a",
   muted: "#6b6b68",
   border: "#e2e5ea",
+  // Semáforo de 4 niveles usado en los reportes de carga (>80% / 60-80% / 40-60% / <40% del
+  // valor de referencia — nunca un color puesto a mano por fila, siempre calculado).
+  nivelAlto: "#f2726c",
+  nivelMedioAlto: "#f5d548",
+  nivelMedio: "#6dc46d",
+  nivelBajo: "#7fa6e8",
 };
 
 export function registerPdfFonts() {

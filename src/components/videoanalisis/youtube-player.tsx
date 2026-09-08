@@ -27,6 +27,11 @@ declare global {
   }
 }
 
+/** Video pendiente de cargar porque `cargarVideo` se llamó antes de que el player avisara `onReady`
+ * (ej. tocar un clip apenas se cargaron los resultados de una búsqueda) — se aplica en cuanto esté listo,
+ * en vez de perderse en silencio. */
+type CargaPendiente = { videoId: string; startSeconds: number };
+
 export type YoutubePlayerHandle = {
   seekTo: (seconds: number) => void;
   cargarVideo: (videoId: string, startSeconds?: number) => void;
@@ -56,20 +61,40 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, { videoId: string }
 ) {
   const contenedorRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
+  // El objeto que devuelve `new YT.Player(...)` existe de inmediato, pero sus métodos
+  // (pauseVideo, seekTo, etc.) recién quedan disponibles cuando la API dispara `onReady` —
+  // llamarlos antes tira "no es una función". `listoRef` marca ese momento real.
+  const listoRef = useRef(false);
+  const pendienteRef = useRef<CargaPendiente | null>(null);
 
   useEffect(() => {
     let cancelado = false;
+    listoRef.current = false;
+    pendienteRef.current = null;
 
     cargarApiYoutube().then(() => {
       if (cancelado || !contenedorRef.current || !window.YT) return;
       playerRef.current = new window.YT.Player(contenedorRef.current, {
         videoId,
         playerVars: { rel: 0 },
+        events: {
+          onReady: () => {
+            if (cancelado) return;
+            listoRef.current = true;
+            const pendiente = pendienteRef.current;
+            if (pendiente) {
+              pendienteRef.current = null;
+              playerRef.current?.loadVideoById(pendiente.videoId, pendiente.startSeconds);
+            }
+          },
+        },
       });
     });
 
     return () => {
       cancelado = true;
+      listoRef.current = false;
+      pendienteRef.current = null;
       playerRef.current?.destroy();
       playerRef.current = null;
     };
@@ -79,16 +104,24 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, { videoId: string }
     ref,
     () => ({
       seekTo: (seconds: number) => {
+        if (!listoRef.current) return;
         playerRef.current?.seekTo(seconds, true);
         playerRef.current?.playVideo();
       },
       cargarVideo: (videoId: string, startSeconds?: number) => {
+        if (!listoRef.current) {
+          // Todavía no disparó onReady (ej. se tocó un clip apenas se cargó el video actual) —
+          // se guarda y se aplica solo cuando esté listo, en vez de perderse en silencio.
+          pendienteRef.current = { videoId, startSeconds: startSeconds ?? 0 };
+          return;
+        }
         playerRef.current?.loadVideoById(videoId, startSeconds ?? 0);
       },
       pausar: () => {
+        if (!listoRef.current) return;
         playerRef.current?.pauseVideo();
       },
-      getCurrentTime: () => playerRef.current?.getCurrentTime() ?? 0,
+      getCurrentTime: () => (listoRef.current ? (playerRef.current?.getCurrentTime() ?? 0) : 0),
     }),
     [],
   );

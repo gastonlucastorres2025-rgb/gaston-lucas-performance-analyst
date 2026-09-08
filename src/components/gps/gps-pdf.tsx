@@ -2,8 +2,9 @@ import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { COLORS, registerPdfFonts } from "@/lib/pdf-theme";
 import type { GpsRegistro, GpsResumenJugador } from "@/lib/gps-data";
 import { resumenPorJugador } from "@/lib/gps-data";
+import { formatearNombreJugador } from "@/lib/gps-nombres";
 
-export type GpsPdfBloque = { fecha: string; turno: string | null; registros: GpsRegistro[] };
+export type GpsPdfBloque = { id: string; fecha: string; turno: string | null; registros: GpsRegistro[] };
 
 export type GpsPdfData = {
   titulo: string;
@@ -55,7 +56,7 @@ function TablaSesion({ bloque }: { bloque: GpsPdfBloque }) {
       </View>
       {bloque.registros.map((r) => (
         <View key={r.id} style={styles.fila} wrap={false}>
-          <Text style={[styles.celda, { flex: 2, fontWeight: 700 }]}>{r.nombre}</Text>
+          <Text style={[styles.celda, { flex: 2, fontWeight: 700 }]}>{formatearNombreJugador(r.nombre)}</Text>
           <Text style={[styles.celda, { flex: 1, textAlign: "center" }]}>{r.duracionMin ?? "—"}</Text>
           <Text style={[styles.celda, { flex: 1, textAlign: "center" }]}>{r.distanciaTotalM ?? "—"}</Text>
           <Text style={[styles.celda, { flex: 1, textAlign: "center" }]}>{r.velocidadMaximaKmh ?? "—"}</Text>
@@ -81,7 +82,7 @@ function TablaResumen({ jugadores }: { jugadores: GpsResumenJugador[] }) {
       </View>
       {jugadores.map((j) => (
         <View key={j.nombre} style={styles.fila} wrap={false}>
-          <Text style={[styles.celda, { flex: 2, fontWeight: 700 }]}>{j.nombre}</Text>
+          <Text style={[styles.celda, { flex: 2, fontWeight: 700 }]}>{formatearNombreJugador(j.nombre)}</Text>
           <Text style={[styles.celda, { flex: 1, textAlign: "center" }]}>{j.sesiones}</Text>
           <Text style={[styles.celda, { flex: 1, textAlign: "center" }]}>{j.distanciaTotalM.toLocaleString("es-UY")}</Text>
           <Text style={[styles.celda, { flex: 1, textAlign: "center" }]}>{j.distanciaPromedioM.toLocaleString("es-UY")}</Text>
@@ -105,7 +106,7 @@ export function GpsPdfDocument({ data }: { data: GpsPdfData }) {
         <Text style={styles.titulo}>{data.titulo}</Text>
         <Text style={styles.sub}>Datos reales de GPS — generado el {generado}.</Text>
         {data.bloques.map((bloque) => (
-          <TablaSesion key={`${bloque.fecha}-${bloque.turno ?? ""}`} bloque={bloque} />
+          <TablaSesion key={bloque.id} bloque={bloque} />
         ))}
         {jugadores.length > 0 && <TablaResumen jugadores={jugadores} />}
         <Footer />

@@ -1,92 +1,79 @@
-import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { GpsExportarPdf } from "@/components/gps/gps-exportar-pdf";
-import { listarRegistrosEnRango, listarSesiones, resumenPorJugador } from "@/lib/gps-data";
+import { GpsSubnav } from "@/components/gps/gps-subnav";
+import { FiltrosGps } from "@/components/gps/filtros-gps";
+import { KpiCard } from "@/components/gps/kpi-card";
+import { GraficoCargaSesion } from "@/components/gps/grafico-carga-sesion";
+import { GraficoCargaColectiva } from "@/components/gps/grafico-carga-colectiva";
+import { TablaGps } from "@/components/gps/tabla-gps";
+import { listarRegistrosDetallado, type GpsRegistroConSesion } from "@/lib/gps-data";
+import { obtenerPartidosReales } from "@/lib/gps-partidos";
+import { promedioSimple } from "@/lib/gps-metricas";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const TURNO_LABEL: Record<string, string> = { M: "Matutino", V: "Vespertino" };
+function filtrar(registros: GpsRegistroConSesion[], jugador?: string, md?: string) {
+  return registros.filter((r) => (!jugador || r.nombre === jugador) && (!md || r.md === md));
+}
 
-export default async function GpsPage({ searchParams }: { searchParams: Promise<{ desde?: string; hasta?: string }> }) {
-  const { desde, hasta } = await searchParams;
+export default async function GpsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ desde?: string; hasta?: string; jugador?: string; md?: string; partido?: string }>;
+}) {
+  const { desde, hasta, jugador, md, partido } = await searchParams;
   const supabase = await createClient();
 
-  const [sesiones, bloques] = await Promise.all([
-    listarSesiones(supabase, desde, hasta),
-    listarRegistrosEnRango(supabase, desde, hasta),
-  ]);
-  const jugadores = resumenPorJugador(bloques);
+  const [registrosRango, partidos] = await Promise.all([listarRegistrosDetallado(supabase, desde, hasta), obtenerPartidosReales(supabase)]);
+  const jugadoresDisponibles = Array.from(new Set(registrosRango.map((r) => r.nombre))).sort((a, b) => a.localeCompare(b));
+  const registrosFiltrados = filtrar(registrosRango, jugador, md);
+
+  const sesionesDistintas = new Set(registrosFiltrados.map((r) => r.sesionId)).size;
+  const jugadoresDistintos = new Set(registrosFiltrados.map((r) => r.nombre)).size;
 
   return (
     <div>
-      <PageHeader
-        title="GPS"
-        description="Carga física real del período de trabajo, cargada desde los CSV del proveedor. No depende del plantel de ningún club en particular."
-      />
+      <PageHeader title="GPS · Performance" description="Centro de análisis de carga física — datos reales del proveedor GPS, sin depender del plantel de ningún club en particular." />
+      <GpsSubnav />
 
-      <GpsExportarPdf desdeInicial={desde} hastaInicial={hasta} />
-
-      <div className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/50">
-          Resumen por jugador {desde || hasta ? "(rango filtrado)" : "(todo el período)"}
-        </h2>
-        {jugadores.length === 0 ? (
-          <p className="text-sm text-foreground/50">No hay datos de GPS en este rango.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-primary/5 text-xs uppercase tracking-wide text-foreground/50">
-                <tr>
-                  <th className="px-3 py-2 text-left">Jugador</th>
-                  <th className="px-3 py-2 text-center">Sesiones</th>
-                  <th className="px-3 py-2 text-center">Distancia total (m)</th>
-                  <th className="px-3 py-2 text-center">Promedio/sesión (m)</th>
-                  <th className="px-3 py-2 text-center">Vel. máxima (km/h)</th>
-                  <th className="px-3 py-2 text-center">Aceleraciones (prom.)</th>
-                  <th className="px-3 py-2 text-center">Desaceleraciones (prom.)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {jugadores.map((j) => (
-                  <tr key={j.nombre}>
-                    <td className="px-3 py-2 font-medium text-foreground">{j.nombre}</td>
-                    <td className="px-3 py-2 text-center">{j.sesiones}</td>
-                    <td className="px-3 py-2 text-center">{j.distanciaTotalM.toLocaleString("es-UY")}</td>
-                    <td className="px-3 py-2 text-center">{j.distanciaPromedioM.toLocaleString("es-UY")}</td>
-                    <td className="px-3 py-2 text-center">{j.velocidadMaximaKmh}</td>
-                    <td className="px-3 py-2 text-center">{j.aceleracionesProm}</td>
-                    <td className="px-3 py-2 text-center">{j.desaceleracionesProm}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <FiltrosGps
+          basePath="/gps"
+          jugadores={jugadoresDisponibles}
+          partidos={partidos.map((p) => ({ id: p.id, fecha: p.fecha, rival: p.rival }))}
+          valores={{ desde, hasta, jugador, md, partido }}
+        />
+        <GpsExportarPdf desde={desde} hasta={hasta} />
       </div>
 
-      <div className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground/50">Sesiones</h2>
-        {sesiones.length === 0 ? (
-          <p className="text-sm text-foreground/50">No hay sesiones en este rango.</p>
-        ) : (
-          <div className="divide-y divide-border rounded-lg border border-border">
-            {sesiones.map((s) => (
-              <Link
-                key={s.id}
-                href={`/gps/${s.id}`}
-                className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-primary/5"
-              >
-                <span className="font-medium text-foreground">
-                  {new Date(`${s.fecha}T00:00:00`).toLocaleDateString("es-UY", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" })}
-                  {s.turno ? ` · ${TURNO_LABEL[s.turno] ?? s.turno}` : ""}
-                </span>
-                <span className="text-foreground/50">{s.cantidadJugadores} jugadores</span>
-              </Link>
-            ))}
+      {registrosFiltrados.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-16 text-center">
+          <p className="text-sm text-foreground/50">No hay datos suficientes para esta combinación de filtros.</p>
+        </div>
+      ) : (
+        <>
+          <p className="mb-3 text-xs text-foreground/40">Promedio por sesión del filtro actual (no un acumulado — así sesiones con distinta asistencia son comparables entre sí).</p>
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <KpiCard label="Sesiones" valor={sesionesDistintas.toLocaleString("es-UY")} contexto="en el filtro actual" />
+            <KpiCard label="Jugadores" valor={jugadoresDistintos.toLocaleString("es-UY")} contexto="con datos en el filtro" />
+            <KpiCard label="Distancia" valor={`${Math.round(promedioSimple(registrosFiltrados, "distanciaTotalM") ?? 0).toLocaleString("es-UY")} m`} />
+            <KpiCard label="Distancia / min" valor={`${(promedioSimple(registrosFiltrados, "distanciaPorMin") ?? 0).toLocaleString("es-UY")} m/min`} />
+            <KpiCard label="HSR" valor={`${Math.round(promedioSimple(registrosFiltrados, "distAltaVelocidadM") ?? 0).toLocaleString("es-UY")} m`} />
+            <KpiCard label="Sprint (zona 6)" valor={`${Math.round(promedioSimple(registrosFiltrados, "distMuyAltaVelocidadM") ?? 0).toLocaleString("es-UY")} m`} />
+            <KpiCard label="Velocidad máxima" valor={`${(promedioSimple(registrosFiltrados, "velocidadMaximaKmh") ?? 0).toLocaleString("es-UY")} km/h`} />
+            <KpiCard label="Aceleraciones" valor={`${Math.round(promedioSimple(registrosFiltrados, "aceleracionesCant") ?? 0)}`} />
+            <KpiCard label="Desaceleraciones" valor={`${Math.round(promedioSimple(registrosFiltrados, "desaceleracionesCant") ?? 0)}`} />
           </div>
-        )}
-      </div>
+
+          <div className="mb-6 grid gap-4 lg:grid-cols-2">
+            <GraficoCargaSesion registros={registrosFiltrados} />
+            <GraficoCargaColectiva registros={registrosFiltrados} />
+          </div>
+
+          <TablaGps registros={registrosFiltrados} />
+        </>
+      )}
     </div>
   );
 }

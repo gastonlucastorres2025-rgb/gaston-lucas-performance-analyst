@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TareasNotifier } from "@/components/tareas-notifier";
 import { createClient } from "@/lib/supabase/client";
+import { TRAYECTORIA_DT } from "@/lib/trayectoria-dt";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -104,13 +105,28 @@ export default function DashboardLayout({
         </nav>
       </aside>
       <div className="flex flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-end border-b border-border bg-surface px-8">
-          <button
-            onClick={handleLogout}
-            className="text-sm text-foreground/60 transition-colors hover:text-accent"
-          >
-            Cerrar sesión
-          </button>
+        <header className="grid h-20 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-surface px-8">
+          <div />
+          <div className="flex items-center justify-center gap-5 rounded-full border border-border bg-gradient-to-b from-white to-primary/[0.04] px-7 py-2.5 shadow-md">
+            {TRAYECTORIA_DT.map((club) => (
+              // eslint-disable-next-line @next/next/no-img-element -- escudos locales en public/escudos, incluye un .svg que next/image no optimiza igual
+              <img
+                key={club.nombre}
+                src={club.escudo}
+                alt={club.nombre}
+                title={`${club.nombre} (${club.pais})`}
+                className="h-11 w-auto object-contain drop-shadow-sm"
+              />
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={handleLogout}
+              className="text-sm text-foreground/60 transition-colors hover:text-accent"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </header>
         <main className="flex-1 bg-background px-8 py-8">{children}</main>
       </div>
