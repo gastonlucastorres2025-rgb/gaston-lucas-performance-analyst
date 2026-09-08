@@ -11,7 +11,12 @@ import { createClient } from "@/lib/supabase/client";
  * sirve para nada: la sesión de recuperación existe pero no hay forma de usarla. */
 export default function ActualizarContrasenaPage() {
   const router = useRouter();
-  const supabase = createClient();
+  // Memoizado: `createClient()` crea una instancia nueva del cliente de Supabase cada vez que se
+  // llama. Sin esto, cada re-render (ej. el propio `setEstado` de abajo) generaba un cliente
+  // nuevo y abandonaba a mitad de camino el procesamiento async del hash de recuperación de la
+  // URL — se perdía la sesión que se estaba por establecer, mostrando "link inválido" en un link
+  // real y válido.
+  const [supabase] = useState(() => createClient());
   const [estado, setEstado] = useState<"cargando" | "listo" | "sin-sesion">("cargando");
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
