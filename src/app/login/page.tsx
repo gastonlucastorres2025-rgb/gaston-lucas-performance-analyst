@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +14,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [modo, setModo] = useState<"login" | "recuperar">("login");
   const [recuperarEnviado, setRecuperarEnviado] = useState(false);
+
+  useEffect(() => {
+    // Un link de recuperación de contraseña puede terminar acá (en vez de en la raíz "/") porque
+    // el hash con los tokens viaja pegado durante la cadena de redirects sin sesión (/ → /dashboard
+    // → /login). Si aparece, se reenvía a /actualizar-contrasena preservando ese hash/query en vez
+    // de mostrar el login normal.
+    const esRecuperacion =
+      window.location.hash.includes("type=recovery") ||
+      window.location.hash.includes("access_token") ||
+      new URLSearchParams(window.location.search).has("code");
+    if (esRecuperacion) {
+      window.location.replace(`/actualizar-contrasena${window.location.search}${window.location.hash}`);
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
