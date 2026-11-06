@@ -43,7 +43,7 @@ export function TareasNotifier() {
         if (dt <= now && now - dt <= GRACE_MS) {
           new Notification(tarea.titulo, {
             body: tarea.descripcion || `Tarea programada para hoy a las ${tarea.hora.slice(0, 5)}`,
-            icon: "/escudo-nacional.png",
+            icon: "/escudo-junior.png",
           });
           await supabase.from("tareas").update({ notificado: true }).eq("id", tarea.id);
         }

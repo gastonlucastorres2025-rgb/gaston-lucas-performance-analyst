@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import * as XLSX from "xlsx";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { CLUB_ACTUAL } from "@/lib/gps/club";
+import { guardarArchivoGps, parsearCsvGps } from "@/lib/gps/importar-csv";
 
 const BUCKET = "gps-snapshots";
 
@@ -9,7 +11,9 @@ const BUCKET = "gps-snapshots";
 // (un servicio en la nube, siempre alcanzable) usando GPS_WEBHOOK_SECRET como prefijo de
 // carpeta. Esta ruta corre en la app local y hace el trabajo inverso: lista lo que haya
 // en ese prefijo, y aterriza cada archivo nuevo (snapshot + catálogo de columnas +
-// importación) — todavía sin mapear a gps_registros, hasta que veamos columnas reales.
+// importación) y, si el nombre del archivo trae la fecha de la sesión (YYYY-MM-DD-...), lo convierte
+// en gps_sesiones / gps_registros del club actual con el mismo código que usa
+// scripts/importar-gps-csv.mjs. Un archivo que no se puede mapear queda "sin_mapear" para revisarlo.
 export async function GET() {
   const prefix = process.env.GPS_WEBHOOK_SECRET;
   if (!prefix) return Response.json({ error: "Falta GPS_WEBHOOK_SECRET." }, { status: 500 });
@@ -81,14 +85,37 @@ export async function GET() {
         .upsert({ team_id: team.id, clave, ultima_vez_visto: hoy }, { onConflict: "team_id,clave", ignoreDuplicates: false });
     }
 
-    await admin.from("gps_importaciones").insert({
-      team_id: team.id,
-      snapshot_id: snapshot.id,
-      origen: "apps_script",
-      estado: "sin_mapear",
-      detalle: { columnas, muestra: filas.slice(0, 5) },
-      finished_at: new Date().toISOString(),
-    });
+    const parseado = parsearCsvGps(contenido.toString("utf-8"), archivo.name);
+    const { data: importacion } = await admin
+      .from("gps_importaciones")
+      .insert({
+        team_id: team.id,
+        snapshot_id: snapshot.id,
+        origen: "apps_script",
+        estado: parseado ? "procesando" : "sin_mapear",
+        detalle: { columnas, club: CLUB_ACTUAL, muestra: filas.slice(0, 5) },
+        finished_at: parseado ? null : new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (parseado && importacion) {
+      try {
+        const r = await guardarArchivoGps(admin, team.id, importacion.id, parseado, CLUB_ACTUAL);
+        await admin
+          .from("gps_importaciones")
+          .update({ estado: "ok", filas_nuevas: r.registrosNuevos, filas_actualizadas: r.registrosActualizados, finished_at: new Date().toISOString() })
+          .eq("id", importacion.id);
+      } catch (e) {
+        const mensaje = e instanceof Error ? e.message : String(e);
+        await admin
+          .from("gps_importaciones")
+          .update({ estado: "error", detalle: { columnas, club: CLUB_ACTUAL, error: mensaje }, finished_at: new Date().toISOString() })
+          .eq("id", importacion.id);
+        resultados.push({ archivo: archivo.name, estado: "error", error: mensaje });
+        continue;
+      }
+    }
 
     resultados.push({ archivo: archivo.name, estado: "importado", filas: filas.length });
   }

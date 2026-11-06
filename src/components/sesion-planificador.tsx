@@ -263,7 +263,7 @@ export function SesionPlanificador({
   async function handleDescargarPdf() {
     setPdfPending(true);
     try {
-      const crestUrl = `${window.location.origin}/escudo-nacional.png`;
+      const crestUrl = `${window.location.origin}/escudo-junior.png`;
       const blob = await pdf(
         <SesionPdfDocument
           data={{

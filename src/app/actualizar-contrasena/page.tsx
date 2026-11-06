@@ -80,8 +80,8 @@ export default function ActualizarContrasenaPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-surface p-8 shadow-sm">
         <Image
-          src="/escudo-nacional.png"
-          alt="Escudo de Nacional"
+          src="/escudo-junior.png"
+          alt="Escudo de Junior"
           width={56}
           height={56}
           priority

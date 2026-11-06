@@ -16,7 +16,7 @@ export function InformeRivalPdfButton({
   async function handleDescargar() {
     setPending(true);
     try {
-      const crestUrl = `${window.location.origin}/escudo-nacional.png`;
+      const crestUrl = `${window.location.origin}/escudo-junior.png`;
       const blob = await pdf(
         <InformeRivalPdfDocument data={{ rival, planes, partidos, carpetas, informes, crestUrl }} />,
       ).toBlob();

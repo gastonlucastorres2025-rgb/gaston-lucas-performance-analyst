@@ -10,7 +10,7 @@ export function FasesRivalPdfButton({ data }: { data: Omit<FasesRivalPdfData, "c
   async function handleDescargar() {
     setPending(true);
     try {
-      const crestUrl = `${window.location.origin}/escudo-nacional.png`;
+      const crestUrl = `${window.location.origin}/escudo-junior.png`;
       const blob = await pdf(<FasesRivalPdfDocument data={{ ...data, crestUrl }} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

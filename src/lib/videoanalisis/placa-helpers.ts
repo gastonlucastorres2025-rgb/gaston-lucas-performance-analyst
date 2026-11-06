@@ -1,7 +1,7 @@
 import { escudoClubUruguayo } from "@/lib/uruguay-clubs";
 
 const NACIONAL_NOMBRE = "Nacional";
-const NACIONAL_ESCUDO = "/escudo-nacional.png";
+const NACIONAL_ESCUDO = "/escudo-junior.png";
 
 export function equiposPlaca(partido: {
   rival: string;

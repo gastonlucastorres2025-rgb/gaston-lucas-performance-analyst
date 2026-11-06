@@ -4,17 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITEMS = [
-  { href: "/gps", label: "Dashboard", exact: true },
-  { href: "/gps/jugadores", label: "Jugadores" },
-  { href: "/gps/sesiones", label: "Sesiones" },
-  { href: "/gps/partidos", label: "Partidos" },
-  { href: "/gps/comparar", label: "Comparativas" },
+  { href: "/gps", label: "Resumen", exact: true },
+  { href: "/gps/semana", label: "Semana actual" },
+  { href: "/gps/acwr", label: "ACWR y riesgo" },
+  { href: "/gps/lesiones", label: "Lesiones / molestias" },
+  { href: "/gps/plantel", label: "Plantel" },
 ];
 
 export function GpsSubnav() {
   const pathname = usePathname();
   return (
-    <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
+    <nav className="flex gap-1 overflow-x-auto">
       {ITEMS.map((item) => {
         const activo = item.exact ? pathname === item.href : pathname.startsWith(item.href);
         return (

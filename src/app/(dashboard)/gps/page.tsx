@@ -1,79 +1,92 @@
-import { PageHeader } from "@/components/page-header";
-import { GpsExportarPdf } from "@/components/gps/gps-exportar-pdf";
-import { GpsSubnav } from "@/components/gps/gps-subnav";
-import { FiltrosGps } from "@/components/gps/filtros-gps";
-import { KpiCard } from "@/components/gps/kpi-card";
-import { GraficoCargaSesion } from "@/components/gps/grafico-carga-sesion";
-import { GraficoCargaColectiva } from "@/components/gps/grafico-carga-colectiva";
-import { TablaGps } from "@/components/gps/tabla-gps";
-import { listarRegistrosDetallado, type GpsRegistroConSesion } from "@/lib/gps-data";
-import { obtenerPartidosReales } from "@/lib/gps-partidos";
-import { promedioSimple } from "@/lib/gps-metricas";
+import { SinDatos, Tarjeta, TarjetaAlerta, Tile, formatearFecha } from "@/components/gps/piezas";
+import { VARIABLES_ACWR, bandaAcwr, severidadVmax } from "@/lib/gps/calculos";
+import { obtenerClubActivo } from "@/lib/gps/club";
+import { cargarPanel } from "@/lib/gps/panel";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function filtrar(registros: GpsRegistroConSesion[], jugador?: string, md?: string) {
-  return registros.filter((r) => (!jugador || r.nombre === jugador) && (!md || r.md === md));
-}
-
-export default async function GpsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ desde?: string; hasta?: string; jugador?: string; md?: string; partido?: string }>;
-}) {
-  const { desde, hasta, jugador, md, partido } = await searchParams;
+export default async function GpsResumenPage() {
   const supabase = await createClient();
+  const club = await obtenerClubActivo(supabase);
+  const panel = await cargarPanel(supabase, club);
 
-  const [registrosRango, partidos] = await Promise.all([listarRegistrosDetallado(supabase, desde, hasta), obtenerPartidosReales(supabase)]);
-  const jugadoresDisponibles = Array.from(new Set(registrosRango.map((r) => r.nombre))).sort((a, b) => a.localeCompare(b));
-  const registrosFiltrados = filtrar(registrosRango, jugador, md);
+  if (!panel.ultimaFecha) return <SinDatos />;
 
-  const sesionesDistintas = new Set(registrosFiltrados.map((r) => r.sesionId)).size;
-  const jugadoresDistintos = new Set(registrosFiltrados.map((r) => r.nombre)).size;
+  const alertasAcwr = panel.filas
+    .map((f) => ({ f, altos: VARIABLES_ACWR.filter((v) => (f.acwr[v] ?? 0) > 1.3) }))
+    .filter((x) => x.altos.length > 0)
+    .map(({ f, altos }) => ({
+      nombre: f.nombre,
+      peor: Math.max(...altos.map((v) => f.acwr[v] as number)),
+      detalle: altos.map((v) => `${v}: ${(f.acwr[v] as number).toFixed(2)}`).join(" · "),
+    }))
+    .sort((a, b) => b.peor - a.peor);
+
+  const alertasVmax = panel.filas
+    .filter((f) => f.vmax && f.vmax.dias >= 7)
+    .sort((a, b) => b.vmax!.dias - a.vmax!.dias);
+
+  const lesionesAbiertas = panel.lesiones.filter((l) => l.estado !== "Alta");
 
   return (
     <div>
-      <PageHeader title="GPS · Performance" description="Centro de análisis de carga física — datos reales del proveedor GPS, sin depender del plantel de ningún club en particular." />
-      <GpsSubnav />
-
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <FiltrosGps
-          basePath="/gps"
-          jugadores={jugadoresDisponibles}
-          partidos={partidos.map((p) => ({ id: p.id, fecha: p.fecha, rival: p.rival }))}
-          valores={{ desde, hasta, jugador, md, partido }}
-        />
-        <GpsExportarPdf desde={desde} hasta={hasta} />
-      </div>
-
-      {registrosFiltrados.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-surface px-4 py-16 text-center">
-          <p className="text-sm text-foreground/50">No hay datos suficientes para esta combinación de filtros.</p>
+      <Tarjeta
+        titulo={`Resumen del día — ${formatearFecha(panel.hoy)}`}
+        nota={`Último día con datos GPS cargados: ${formatearFecha(panel.ultimaFecha)}. Todo lo que hoy necesita atención, junto.`}
+      >
+        <div className="flex flex-wrap gap-3">
+          <Tile numero={alertasAcwr.length} etiqueta="jugadores en ACWR amarillo/rojo" severidad={alertasAcwr.length ? "alerta" : "ok"} />
+          <Tile numero={alertasVmax.length} etiqueta="con VMAX atrasada (≥7 días)" severidad={alertasVmax.length ? "atencion" : "ok"} />
+          <Tile numero={lesionesAbiertas.length} etiqueta="lesiones activas / en recuperación" severidad={lesionesAbiertas.length ? "alerta" : "ok"} />
         </div>
-      ) : (
-        <>
-          <p className="mb-3 text-xs text-foreground/40">Promedio por sesión del filtro actual (no un acumulado — así sesiones con distinta asistencia son comparables entre sí).</p>
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <KpiCard label="Sesiones" valor={sesionesDistintas.toLocaleString("es-UY")} contexto="en el filtro actual" />
-            <KpiCard label="Jugadores" valor={jugadoresDistintos.toLocaleString("es-UY")} contexto="con datos en el filtro" />
-            <KpiCard label="Distancia" valor={`${Math.round(promedioSimple(registrosFiltrados, "distanciaTotalM") ?? 0).toLocaleString("es-UY")} m`} />
-            <KpiCard label="Distancia / min" valor={`${(promedioSimple(registrosFiltrados, "distanciaPorMin") ?? 0).toLocaleString("es-UY")} m/min`} />
-            <KpiCard label="HSR" valor={`${Math.round(promedioSimple(registrosFiltrados, "distAltaVelocidadM") ?? 0).toLocaleString("es-UY")} m`} />
-            <KpiCard label="Sprint (zona 6)" valor={`${Math.round(promedioSimple(registrosFiltrados, "distMuyAltaVelocidadM") ?? 0).toLocaleString("es-UY")} m`} />
-            <KpiCard label="Velocidad máxima" valor={`${(promedioSimple(registrosFiltrados, "velocidadMaximaKmh") ?? 0).toLocaleString("es-UY")} km/h`} />
-            <KpiCard label="Aceleraciones" valor={`${Math.round(promedioSimple(registrosFiltrados, "aceleracionesCant") ?? 0)}`} />
-            <KpiCard label="Desaceleraciones" valor={`${Math.round(promedioSimple(registrosFiltrados, "desaceleracionesCant") ?? 0)}`} />
-          </div>
+      </Tarjeta>
 
-          <div className="mb-6 grid gap-4 lg:grid-cols-2">
-            <GraficoCargaSesion registros={registrosFiltrados} />
-            <GraficoCargaColectiva registros={registrosFiltrados} />
+      <Tarjeta titulo="Alertas — ACWR en amarillo/rojo">
+        {alertasAcwr.length === 0 ? (
+          <p className="text-sm text-foreground/60">Nadie en amarillo/rojo de ACWR hoy.</p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {alertasAcwr.map((a) => (
+              <TarjetaAlerta key={a.nombre} titulo={a.nombre} detalle={a.detalle} severidad={bandaAcwr(a.peor) === "riesgo" ? "alerta" : "atencion"} />
+            ))}
           </div>
+        )}
+      </Tarjeta>
 
-          <TablaGps registros={registrosFiltrados} />
-        </>
-      )}
+      <Tarjeta titulo="Alertas — velocidad máxima atrasada">
+        {alertasVmax.length === 0 ? (
+          <p className="text-sm text-foreground/60">Todos llegaron al 90% de su VMAX en los últimos 7 días.</p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {alertasVmax.map((f) => (
+              <TarjetaAlerta
+                key={f.nombre}
+                titulo={f.nombre}
+                detalle={`Sin llegar al 90% de su VMAX de referencia hace ${f.vmax!.dias} días (último: ${formatearFecha(f.vmax!.ultimoDia)})`}
+                severidad={severidadVmax(f.vmax!.dias) === "alerta" ? "alerta" : "atencion"}
+              />
+            ))}
+          </div>
+        )}
+      </Tarjeta>
+
+      <Tarjeta titulo="Lesiones activas / en recuperación">
+        {lesionesAbiertas.length === 0 ? (
+          <p className="text-sm text-foreground/60">No hay lesiones activas ni en recuperación.</p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {lesionesAbiertas.map((l) => (
+              <TarjetaAlerta
+                key={l.id}
+                titulo={`${l.jugador}${l.zona ? ` — ${l.zona}` : ""}`}
+                detalle={`${l.estado} · desde ${formatearFecha(l.fecha)}`}
+                severidad={l.estado === "Activa" ? "alerta" : "atencion"}
+              />
+            ))}
+          </div>
+        )}
+      </Tarjeta>
     </div>
   );
 }

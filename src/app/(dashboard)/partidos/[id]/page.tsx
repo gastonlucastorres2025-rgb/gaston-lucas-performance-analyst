@@ -32,7 +32,7 @@ export default async function PartidoDetallePage({
           <div className="flex flex-col items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/escudo-nacional.png"
+              src="/escudo-junior.png"
               alt="Nacional"
               width={80}
               height={80}

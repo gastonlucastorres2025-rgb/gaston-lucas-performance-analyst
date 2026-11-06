@@ -11,7 +11,7 @@ export function AnalisisRivalPdfButton({ plan }: { plan: AnalisisRivalData }) {
   async function handleDescargar() {
     setPending(true);
     try {
-      const crestUrl = `${window.location.origin}/escudo-nacional.png`;
+      const crestUrl = `${window.location.origin}/escudo-junior.png`;
       const blob = await pdf(<AnalisisRivalPdfDocument plan={plan} crestUrl={crestUrl} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

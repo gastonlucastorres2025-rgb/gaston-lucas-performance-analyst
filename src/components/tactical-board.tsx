@@ -120,7 +120,7 @@ export function TacticalBoard({ players }: { players: Player[] }) {
         <PitchSvg />
 
         <Image
-          src="/escudo-nacional.png"
+          src="/escudo-junior.png"
           alt=""
           width={200}
           height={200}

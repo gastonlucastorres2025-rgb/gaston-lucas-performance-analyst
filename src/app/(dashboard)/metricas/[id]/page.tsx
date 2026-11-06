@@ -67,7 +67,7 @@ export default async function MetricaDetallePage({
         <div className="flex flex-col items-center gap-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/escudo-nacional.png"
+            src="/escudo-junior.png"
             alt="Nacional"
             width={28}
             height={28}

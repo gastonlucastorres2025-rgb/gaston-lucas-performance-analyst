@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/metricas", label: "Métricas de Rendimiento" },
   { href: "/rivales", label: "Rivales" },
   { href: "/videoanalisis", label: "Videoanálisis" },
+  { href: "/biblioteca", label: "Biblioteca" },
   { href: "/analisis-rival", label: "Análisis de Rival" },
   { href: "/fases-rival", label: "Fases del Rival" },
   { href: "/statsbomb", label: "Informe StatsBomb" },
@@ -36,7 +37,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const [perfil, setPerfil] = useState<{ nombre: string; soloLectura: boolean } | null>(null);
+  const [perfil, setPerfil] = useState<{ nombre: string; soloLectura: boolean; rol: string } | null>(null);
 
   useEffect(() => {
     let activo = true;
@@ -45,8 +46,8 @@ export default function DashboardLayout({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase.from("staff_users").select("nombre, solo_lectura").eq("id", user.id).single();
-      if (activo && data) setPerfil({ nombre: data.nombre, soloLectura: data.solo_lectura });
+      const { data } = await supabase.from("staff_users").select("nombre, solo_lectura, rol").eq("id", user.id).single();
+      if (activo && data) setPerfil({ nombre: data.nombre, soloLectura: data.solo_lectura, rol: data.rol });
     })();
     return () => {
       activo = false;
@@ -65,8 +66,8 @@ export default function DashboardLayout({
       <aside className="flex w-64 shrink-0 flex-col bg-primary">
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
           <Image
-            src="/escudo-nacional.png"
-            alt="Escudo de Nacional"
+            src="/escudo-junior.png"
+            alt="Escudo de Junior"
             width={40}
             height={40}
             priority
@@ -75,12 +76,12 @@ export default function DashboardLayout({
             <div className="text-sm font-semibold text-white">
               Cuerpo Técnico
             </div>
-            <div className="text-xs text-white/60">{perfil?.nombre ?? " "}</div>
+            <div className="text-xs text-white/60">Jorge Bava</div>
           </div>
         </div>
         {perfil?.soloLectura && (
           <div className="mx-3 mt-3 rounded-md bg-accent/20 px-3 py-2 text-xs font-medium text-white">
-            👁 Modo solo lectura — podés navegar y descargar, pero no guardar cambios.
+            👁 Modo solo lectura — podés navegar y descargar, pero no guardar cambios.{perfil.rol === "preparador_fisico" && " Excepto en GPS, donde sí podés editar."}
           </div>
         )}
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
@@ -94,7 +95,7 @@ export default function DashboardLayout({
                 href={item.href}
                 className={`rounded-md border-l-2 px-3 py-2 text-sm transition-colors ${
                   isActive
-                    ? "border-accent bg-white/10 font-medium text-white"
+                    ? "border-white bg-white/10 font-medium text-white"
                     : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
                 }`}
               >

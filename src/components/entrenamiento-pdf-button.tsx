@@ -10,7 +10,7 @@ export function EntrenamientoPdfButton({ data }: { data: Omit<EntrenamientoPdfDa
   async function handleDescargar() {
     setPending(true);
     try {
-      const crestUrl = `${window.location.origin}/escudo-nacional.png`;
+      const crestUrl = `${window.location.origin}/escudo-junior.png`;
       const blob = await pdf(<EntrenamientoPdfDocument data={{ ...data, crestUrl }} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

@@ -129,7 +129,7 @@ export function GenerarInformeForm() {
 
   async function handleDescargar() {
     if (!data) return;
-    const crestUrl = `${window.location.origin}/escudo-nacional.png`;
+    const crestUrl = `${window.location.origin}/escudo-junior.png`;
     const blob = await pdf(
       <OpponentReportPdfDocument
         data={data}
