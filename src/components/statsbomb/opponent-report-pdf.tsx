@@ -2894,7 +2894,7 @@ export function OpponentReportPdfDocument({
         <Footer nombre={data.nuestroEquipo.nombre} />
       </Page>
 
-      {/* Página de cierre en blanco con el escudo de Nacional, a pedido explícito del usuario. */}
+      {/* Página de cierre en blanco con el escudo del club (hoy Junior), a pedido explícito del usuario. */}
       <Page size="A4" style={[styles.page, { alignItems: "center", justifyContent: "center" }]}>
         {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, no HTML img */}
         <Image src={nuestroCrestUrl} style={{ width: 260, height: 260 }} />

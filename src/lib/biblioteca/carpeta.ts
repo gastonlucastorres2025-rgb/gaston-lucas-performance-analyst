@@ -52,7 +52,8 @@ export function carpetaPorNombre(nombre: string | null | undefined): CarpetaBibl
 /** Categoría automática según el nombre: "Tactical - Salida de 3.mp4" -> "Tactical". Las grabaciones
  * de pantalla del sistema ("Grabación de pantalla 2026-09-16…") van juntas; el resto, en "Otros". */
 export function categoriaDe(archivo: string): string {
-  const base = archivo.replace(/\.[^.]+$/, "");
+  // macOS guarda los nombres con la tilde separada de la letra (NFD): sin normalizar, "Grabación" no coincide.
+  const base = archivo.normalize("NFC").replace(/\.[^.]+$/, "");
   if (/^grabaci[oó]n de pantalla/i.test(base)) return "Grabación de pantalla";
   const m = base.match(/^(.+?)\s+-\s+/);
   if (!m) return "Otros";

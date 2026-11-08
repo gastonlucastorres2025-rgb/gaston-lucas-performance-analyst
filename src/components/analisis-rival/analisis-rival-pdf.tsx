@@ -115,7 +115,7 @@ export function AnalisisRivalPdfDocument({ plan, crestUrl }: { plan: AnalisisRiv
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img */}
           <Image src={crestUrl} style={styles.crest} />
           <View>
-            <Text style={styles.clubName}>Club Nacional de Football</Text>
+            <Text style={styles.clubName}>Junior de Barranquilla</Text>
             <Text style={styles.subtitle}>Plan de Partido — Análisis de {plan.rival || "Rival"}</Text>
           </View>
         </View>
@@ -238,7 +238,7 @@ export function AnalisisRivalPdfDocument({ plan, crestUrl }: { plan: AnalisisRiv
 
         <Text
           style={styles.footer}
-          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Nacional — Página ${pageNumber} de ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Junior de Barranquilla — Página ${pageNumber} de ${totalPages}`}
           fixed
         />
       </Page>

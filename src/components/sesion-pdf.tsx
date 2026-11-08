@@ -165,7 +165,7 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img */}
           <Image src={data.crestUrl} style={styles.crest} />
           <View style={styles.headerText}>
-            <Text style={styles.clubName}>Club Nacional de Football</Text>
+            <Text style={styles.clubName}>Junior de Barranquilla</Text>
             <Text style={styles.subtitle}>Planificación de sesión de entrenamiento</Text>
           </View>
         </View>
@@ -268,7 +268,7 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
 
         <Text
           style={styles.footer}
-          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Nacional — Página ${pageNumber} de ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Junior de Barranquilla — Página ${pageNumber} de ${totalPages}`}
           fixed
         />
       </Page>

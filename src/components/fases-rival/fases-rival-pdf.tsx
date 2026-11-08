@@ -75,7 +75,7 @@ export function FasesRivalPdfDocument({ data }: { data: FasesRivalPdfData }) {
         <View style={styles.caratula}>
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img */}
           <Image src={data.crestUrl} style={styles.crest} />
-          <Text style={styles.clubName}>Club Nacional de Football — Cuerpo Técnico</Text>
+          <Text style={styles.clubName}>Junior de Barranquilla — Cuerpo Técnico</Text>
           <Text style={styles.tituloDoc}>Fases del Rival</Text>
           <Text style={styles.rivalNombre}>{data.rival || "Rival"}</Text>
           {(data.ronda || data.competencia) && (
@@ -105,7 +105,7 @@ export function FasesRivalPdfDocument({ data }: { data: FasesRivalPdfData }) {
 
         <Text
           style={styles.footer}
-          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Nacional — Página ${pageNumber} de ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Junior de Barranquilla — Página ${pageNumber} de ${totalPages}`}
           fixed
         />
       </Page>

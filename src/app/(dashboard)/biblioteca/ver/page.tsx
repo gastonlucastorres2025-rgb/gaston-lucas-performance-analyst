@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AccionesArchivo } from "@/components/biblioteca/acciones-archivo";
 import { FormularioVideo } from "@/components/biblioteca/formulario-video";
 import { formatearFechaIso, formatearTamano } from "@/components/biblioteca/formato";
 import { carpetaPorNombre, categoriaDe, resolverVideo } from "@/lib/biblioteca/carpeta";
@@ -52,6 +53,7 @@ export default async function BibliotecaVerPage({ searchParams }: { searchParams
         <aside className="rounded-lg border border-border bg-surface p-4">
           <h2 className="mb-3 text-sm font-semibold text-foreground">Datos del video</h2>
           <FormularioVideo carpeta={carpeta.nombre} archivo={n} inicial={meta} puedeEditar={puedeEditar} />
+          {puedeEditar && <AccionesArchivo key={n} carpeta={carpeta.nombre} archivo={n} />}
         </aside>
       </div>
     </div>

@@ -126,7 +126,7 @@ export function EntrenamientoPdfDocument({ data }: { data: EntrenamientoPdfData 
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img */}
           <Image src={data.crestUrl} style={styles.crest} />
           <View style={styles.headerText}>
-            <Text style={styles.clubName}>Club Nacional de Football</Text>
+            <Text style={styles.clubName}>Junior de Barranquilla</Text>
             <Text style={styles.subtitle}>Cuerpo Técnico · CT Jorge Bava — Sesión de entrenamiento</Text>
           </View>
         </View>
@@ -187,7 +187,7 @@ export function EntrenamientoPdfDocument({ data }: { data: EntrenamientoPdfData 
 
         <Text
           style={styles.footer}
-          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Nacional — Página ${pageNumber} de ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `Cuerpo Técnico · Junior de Barranquilla — Página ${pageNumber} de ${totalPages}`}
           fixed
         />
       </Page>

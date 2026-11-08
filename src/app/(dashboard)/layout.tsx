@@ -16,7 +16,6 @@ const NAV_ITEMS = [
   { href: "/partidos", label: "Partidos" },
   { href: "/gps", label: "GPS" },
   { href: "/metricas", label: "Métricas de Rendimiento" },
-  { href: "/rivales", label: "Rivales" },
   { href: "/videoanalisis", label: "Videoanálisis" },
   { href: "/biblioteca", label: "Biblioteca" },
   { href: "/analisis-rival", label: "Análisis de Rival" },
