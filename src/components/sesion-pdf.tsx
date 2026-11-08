@@ -100,13 +100,13 @@ export type SesionPdfData = {
   principalEnfoque: string;
   principalEspacio: string;
   objetivos_tarea: string;
-  objetivos_fisicos: string;
   activacionImagenUrl: string | null;
   introductorioImagenUrl: string | null;
   principalImagenUrl: string | null;
   habilitados: string[];
   recuperacion: string[];
   reduccion: string[];
+  retorno: string[];
   equipos: { nombre: string; jugadores: string[] }[];
   crestUrl: string;
 };
@@ -203,8 +203,7 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
             enfoque={data.principalEnfoque}
             espacio={data.principalEspacio}
           />
-          <Quadrant title="Objetivos de la tarea" body={data.objetivos_tarea} />
-          <Quadrant title="Objetivos físicos" body={data.objetivos_fisicos} full />
+          <Quadrant title="Objetivos de la sesión detallados en base microciclo" body={data.objetivos_tarea} full />
         </View>
 
         <View style={styles.section}>
@@ -220,11 +219,15 @@ export function SesionPdfDocument({ data }: { data: SesionPdfData }) {
                 </View>
                 <View style={[styles.countBox, { backgroundColor: COLORS.amberTint }]}>
                   <Text style={[styles.countNumber, { color: COLORS.amber }]}>{data.recuperacion.length}</Text>
-                  <Text style={[styles.countLabel, { color: COLORS.amber }]}>En recuperación</Text>
+                  <Text style={[styles.countLabel, { color: COLORS.amber }]}>Sanidad</Text>
                 </View>
                 <View style={[styles.countBox, { backgroundColor: COLORS.redTint }]}>
                   <Text style={[styles.countNumber, { color: COLORS.red }]}>{data.reduccion.length}</Text>
                   <Text style={[styles.countLabel, { color: COLORS.red }]}>Reducción de tareas</Text>
+                </View>
+                <View style={[styles.countBox, { backgroundColor: COLORS.greenTint }]}>
+                  <Text style={[styles.countNumber, { color: COLORS.green }]}>{data.retorno.length}</Text>
+                  <Text style={[styles.countLabel, { color: COLORS.green }]}>En proceso de retorno al campo</Text>
                 </View>
               </View>
               <View style={styles.playerList}>

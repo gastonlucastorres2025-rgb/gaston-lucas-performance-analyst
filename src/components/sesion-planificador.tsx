@@ -42,7 +42,6 @@ type Sesion = {
   principal_enfoque: string | null;
   principal_espacio: Espacio | null;
   objetivos_tarea: string | null;
-  objetivos_fisicos: string | null;
   activacion_imagen_url: string | null;
   introductorio_imagen_url: string | null;
   principal_imagen_url: string | null;
@@ -53,8 +52,9 @@ type Sesion = {
 const ESTADO_COLUMNAS: { key: "sin_asignar" | EstadoJugador; label: string; borderColor: string }[] = [
   { key: "sin_asignar", label: "Sin asignar", borderColor: "border-t-foreground/20" },
   { key: "habilitado", label: "Habilitados", borderColor: "border-t-emerald-500" },
-  { key: "recuperacion", label: "En recuperación", borderColor: "border-t-amber-400" },
+  { key: "recuperacion", label: "Sanidad", borderColor: "border-t-amber-400" },
   { key: "reduccion", label: "Reducción de tareas", borderColor: "border-t-accent" },
+  { key: "retorno", label: "EN PROCESO DE RETORNO AL CAMPO", borderColor: "border-t-sky-500" },
 ];
 
 function nombreCompleto(j: Jugador) {
@@ -108,7 +108,6 @@ export function SesionPlanificador({
     principal_enfoque: sesion?.principal_enfoque ?? "",
     principal_espacio: (sesion?.principal_espacio ?? "") as Espacio | "",
     objetivos_tarea: sesion?.objetivos_tarea ?? "",
-    objetivos_fisicos: sesion?.objetivos_fisicos ?? "",
   });
   const [planStatus, setPlanStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
@@ -259,6 +258,7 @@ export function SesionPlanificador({
   const habilitados = jugadores.filter((j) => columnaDe(j.id) === "habilitado");
   const recuperacion = jugadores.filter((j) => columnaDe(j.id) === "recuperacion");
   const reduccion = jugadores.filter((j) => columnaDe(j.id) === "reduccion");
+  const retorno = jugadores.filter((j) => columnaDe(j.id) === "retorno");
 
   async function handleDescargarPdf() {
     setPdfPending(true);
@@ -279,13 +279,13 @@ export function SesionPlanificador({
             principalEnfoque: plan.principal_enfoque,
             principalEspacio: plan.principal_espacio,
             objetivos_tarea: plan.objetivos_tarea,
-            objetivos_fisicos: plan.objetivos_fisicos,
             activacionImagenUrl: imagenes.activacion,
             introductorioImagenUrl: imagenes.introductorio,
             principalImagenUrl: imagenes.principal,
             habilitados: habilitados.map(nombreCompleto),
             recuperacion: recuperacion.map(nombreCompleto),
             reduccion: reduccion.map(nombreCompleto),
+            retorno: retorno.map(nombreCompleto),
             equipos: equipos.map((eq) => ({
               nombre: eq.nombre,
               jugadores: eq.jugadores.map((id) => (jugadoresById.get(id) ? nombreCompleto(jugadoresById.get(id)!) : "")),
@@ -373,14 +373,9 @@ export function SesionPlanificador({
             onEspacioChange={(v) => setPlan({ ...plan, principal_espacio: v })}
           />
           <Campo
-            label="Objetivos de la tarea"
+            label="Objetivos de la sesión detallados en base microciclo"
             value={plan.objetivos_tarea}
             onChange={(v) => setPlan({ ...plan, objetivos_tarea: v })}
-          />
-          <Campo
-            label="Objetivos físicos"
-            value={plan.objetivos_fisicos}
-            onChange={(v) => setPlan({ ...plan, objetivos_fisicos: v })}
           />
           <div className="flex items-center gap-3">
             <button
@@ -402,20 +397,23 @@ export function SesionPlanificador({
             Disponibilidad del plantel
             <SyncBadge status={syncStatus} />
           </h2>
-          <div className="flex gap-4 text-xs text-foreground/60">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-foreground/60">
             <span>
               <strong className="text-emerald-600">{habilitados.length}</strong> habilitados
             </span>
             <span>
-              <strong className="text-amber-600">{recuperacion.length}</strong> en recuperación
+              <strong className="text-amber-600">{recuperacion.length}</strong> Sanidad
             </span>
             <span>
-              <strong className="text-accent">{reduccion.length}</strong> reducción
+              <strong className="text-accent">{reduccion.length}</strong> Reducción de tareas
+            </span>
+            <span>
+              <strong className="text-sky-600">{retorno.length}</strong> en proceso de retorno
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {ESTADO_COLUMNAS.map((col) => (
             <div
               key={col.key}

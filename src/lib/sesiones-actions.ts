@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-export type EstadoJugador = "habilitado" | "recuperacion" | "reduccion";
+export type EstadoJugador = "habilitado" | "recuperacion" | "reduccion" | "retorno";
 export type Equipo = { nombre: string; jugadores: string[] };
 export type CampoImagen = "activacion" | "introductorio" | "principal";
 
@@ -28,7 +28,6 @@ export type SesionPlanInput = {
   principal_enfoque: string;
   principal_espacio: Espacio | "";
   objetivos_tarea: string;
-  objetivos_fisicos: string;
 };
 
 async function getTeamId() {
